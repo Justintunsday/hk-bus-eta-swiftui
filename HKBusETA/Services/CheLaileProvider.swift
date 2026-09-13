@@ -154,7 +154,7 @@ struct CheLaileProvider: TransitProvider {
 
     // MARK: - Stop board
 
-    func stopBoard(physicalStId: String, namesakeStId: String?) async throws -> [CheLaileBoardLine] {
+    func stopBoard(physicalStId: String, namesakeStId: String?) async throws -> CheLaileStopBoardResult {
         let detail = try await CheLaileClient().stopDetail(
             cityId: cityId,
             physicalStId: physicalStId,
@@ -164,7 +164,14 @@ struct CheLaileProvider: TransitProvider {
         )
         var rows: [CheLaileBoardLine] = []
         var seen = Set<String>()
+        var metros: [CheLaileMetroLine] = []
+        var seenMetros = Set<String>()
         for station in detail.stationList ?? [] {
+            for metro in station.metros ?? [] {
+                let name = metro.fullName ?? metro.lineNo ?? ""
+                guard !name.isEmpty, seenMetros.insert(name).inserted else { continue }
+                metros.append(CheLaileMetroLine(id: name, name: name, color: metro.color))
+            }
             for item in station.lines ?? [] {
                 guard let line = item.line, let lineId = line.lineId, !lineId.isEmpty else { continue }
                 let order = item.targetStation?.order ?? 0
@@ -184,9 +191,10 @@ struct CheLaileProvider: TransitProvider {
                 )
             }
         }
-        return rows.sorted {
+        rows.sort {
             ($0.minutes.first ?? 999) < ($1.minutes.first ?? 999)
         }
+        return CheLaileStopBoardResult(rows: rows, metros: metros)
     }
 
     private static func minutes(bus: CheLaileLineItem.Bus) -> Int? {
@@ -290,4 +298,16 @@ struct CheLaileBoardLine: Identifiable, Sendable {
     let targetOrder: Int
     let status: String
     let minutes: [Int]
+}
+
+struct CheLaileMetroLine: Identifiable, Sendable {
+    let id: String
+    let name: String
+    /// Upstream "r,g,b" text.
+    let color: String?
+}
+
+struct CheLaileStopBoardResult: Sendable {
+    var rows: [CheLaileBoardLine] = []
+    var metros: [CheLaileMetroLine] = []
 }

@@ -259,6 +259,14 @@ struct CheLaileStopDetailResponse: Decodable {
         let lng: Double?
         let distance: Int?
         let lines: [CheLaileLineItem]?
+        let metros: [Metro]?
+    }
+
+    struct Metro: Decodable {
+        let lineId: String?
+        let fullName: String?
+        let lineNo: String?
+        let color: String?
     }
 }
 

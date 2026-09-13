@@ -69,11 +69,12 @@ struct CheLaileStopBoardView: View {
     let title: String
 
     @State private var rows: [CheLaileBoardLine] = []
+    @State private var metros: [CheLaileMetroLine] = []
     @State private var isLoading = false
 
     var body: some View {
         Group {
-            if isLoading && rows.isEmpty {
+            if isLoading && rows.isEmpty && metros.isEmpty {
                 VStack(spacing: DesignTokens.Spacing.m) {
                     ProgressView()
                     Text(L10n.t("status.loading"))
@@ -81,7 +82,7 @@ struct CheLaileStopBoardView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if rows.isEmpty {
+            } else if rows.isEmpty && metros.isEmpty {
                 ContentUnavailableView {
                     Label(L10n.t("stop.noRoutes"), systemImage: "bus")
                 } actions: {
@@ -90,13 +91,31 @@ struct CheLaileStopBoardView: View {
                     }
                 }
             } else {
-                List(rows) { row in
-                    NavigationLink(value: CheLaileLineTarget(
-                        lineId: row.lineId,
-                        title: row.lineName,
-                        seq: max(row.targetOrder - 1, 0)
-                    )) {
-                        CheLaileBoardRowView(row: row)
+                List {
+                    if !rows.isEmpty {
+                        Section {
+                            ForEach(rows) { row in
+                                NavigationLink(value: CheLaileLineTarget(
+                                    lineId: row.lineId,
+                                    title: row.lineName,
+                                    seq: max(row.targetOrder - 1, 0)
+                                )) {
+                                    CheLaileBoardRowView(row: row)
+                                }
+                            }
+                        }
+                    }
+                    if !metros.isEmpty {
+                        Section(L10n.t("chelaile.metros")) {
+                            ForEach(metros) { metro in
+                                HStack(spacing: DesignTokens.Spacing.s) {
+                                    Circle()
+                                        .fill(metroColor(metro.color))
+                                        .frame(width: 9, height: 9)
+                                    Text(metro.name)
+                                }
+                            }
+                        }
                     }
                 }
                 .refreshable { await load() }
@@ -109,11 +128,19 @@ struct CheLaileStopBoardView: View {
 
     private func load() async {
         guard let provider = app.provider as? CheLaileProvider else { return }
-        if rows.isEmpty { isLoading = true }
+        if rows.isEmpty && metros.isEmpty { isLoading = true }
         defer { isLoading = false }
         if let result = try? await provider.stopBoard(physicalStId: physicalStId, namesakeStId: namesakeStId) {
-            rows = result
+            rows = result.rows
+            metros = result.metros
         }
+    }
+
+    private func metroColor(_ text: String?) -> Color {
+        guard let text else { return .gray }
+        let parts = text.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+        guard parts.count >= 3 else { return .gray }
+        return Color(.sRGB, red: parts[0] / 255, green: parts[1] / 255, blue: parts[2] / 255)
     }
 }
 

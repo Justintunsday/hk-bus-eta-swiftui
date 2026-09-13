@@ -421,6 +421,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通用" } }
       }
     },
+"chelaile.metros" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Metro" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "地鐵" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "地铁" } }
+  }
+},
 "chelaile.loadFailed" : {
   "localizations" : {
     "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load route data" } },
