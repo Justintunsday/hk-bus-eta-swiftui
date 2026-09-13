@@ -1,0 +1,432 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "common.favorite" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorite" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }
+      }
+    },
+    "common.retry" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "重試" } }
+      }
+    },
+    "common.unfavorite" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unfavorite" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "取消收藏" } }
+      }
+    },
+    "error.dataDownloadFailed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to download route data. Please check your connection." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "路線資料下載失敗，請檢查網絡連線。" } }
+      }
+    },
+    "error.dataParseFailed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to read route data." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "路線資料解析失敗。" } }
+      }
+    },
+    "error.noData.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Route data needs to be downloaded once. Connect to the internet and try again." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "首次使用需要下載路線資料，請連接網絡後重試。" } }
+      }
+    },
+    "error.noData.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Route data unavailable" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "未能載入路線資料" } }
+      }
+    },
+    "eta.arriving" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Arriving" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "即將到達" } }
+      }
+    },
+    "eta.currentStop" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stop" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "車站" } }
+      }
+    },
+    "eta.noEta" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No upcoming arrival" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "暫無到站預報" } }
+      }
+    },
+    "eta.noServiceToday" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No service today" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "今日沒有服務" } }
+      }
+    },
+    "eta.section.schedule" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Schedule" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "班次" } }
+      }
+    },
+    "eta.section.upcoming" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Upcoming" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "到站時間" } }
+      }
+    },
+    "eta.updatedAt" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Updated" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "更新時間" } }
+      }
+    },
+    "favorites.empty.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap the star on a route or stop to save it here." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "在路線或車站頁面點按星號即可收藏。" } }
+      }
+    },
+    "favorites.empty.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No favorites yet" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "尚未有收藏" } }
+      }
+    },
+    "favorites.routes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Routes" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "路線" } }
+      }
+    },
+    "favorites.stops" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "車站" } }
+      }
+    },
+    "favorites.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }
+      }
+    },
+    "nearby.denied.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable location access in Settings to find stops near you." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "請在系統設定中開啟定位權限，以搜尋附近的車站。" } }
+      }
+    },
+    "nearby.denied.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Location access denied" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "定位權限已拒絕" } }
+      }
+    },
+    "nearby.locating" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Finding nearby stops..." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "正在搜尋附近車站…" } }
+      }
+    },
+    "nearby.openSettings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "開啟設定" } }
+      }
+    },
+    "nearby.permission.button" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow location access" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "允許存取位置" } }
+      }
+    },
+    "nearby.permission.message" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your location is used to find nearby bus stops, and is never uploaded." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "你的位置只會用於搜尋附近車站，不會上傳。" } }
+      }
+    },
+    "nearby.permission.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearby stops" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "附近車站" } }
+      }
+    },
+    "nearby.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearby" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "附近" } }
+      }
+    },
+    "route.every" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Every" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "每" } }
+      }
+    },
+    "route.notFound" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Route not found" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "找不到路線" } }
+      }
+    },
+    "route.section.stops" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "沿途車站" } }
+      }
+    },
+    "route.special" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Special" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "特別班次" } }
+      }
+    },
+    "route.to" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "To" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "往" } }
+      }
+    },
+    "search.empty.hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search by route number or stop name." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "輸入路線號碼或車站名稱開始搜尋。" } }
+      }
+    },
+    "search.noResults" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No results" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "找不到結果" } }
+      }
+    },
+    "search.noResults.hint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try another route number or stop name." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "請嘗試其他路線號碼或車站名稱。" } }
+      }
+    },
+    "search.placeholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Route number or stop name" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "路線號碼或車站名稱" } }
+      }
+    },
+    "search.recent.routes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent routes" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "最近查看的路線" } }
+      }
+    },
+    "search.recent.stops" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent stops" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "最近查看的車站" } }
+      }
+    },
+    "search.section.routes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Routes" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "路線" } }
+      }
+    },
+    "search.section.stops" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "車站" } }
+      }
+    },
+    "search.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "搜尋" } }
+      }
+    },
+    "settings.about" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "關於" } }
+      }
+    },
+    "settings.about.attribution" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ETA data from DATA.GOV.HK and transport operators. Route and fare data from HK Bus Crawling@2021." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "到站資料來自資料一站通及各營運商，路線及收費資料來自 HK Bus Crawling@2021。" } }
+      }
+    },
+    "settings.about.disclaimer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This is an unofficial app. Data is provided for reference only." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "本程式非官方應用，資料僅供參考。" } }
+      }
+    },
+    "settings.about.source" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Source code" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "原始碼" } }
+      }
+    },
+    "settings.about.website" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Website" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "網站" } }
+      }
+    },
+    "settings.annotateScheduled" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark scheduled arrivals" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "標示預定班次" } }
+      }
+    },
+    "settings.data" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Data" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "資料" } }
+      }
+    },
+    "settings.data.lastUpdated" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loaded" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "載入時間" } }
+      }
+    },
+    "settings.data.refresh" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Check for data updates" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "檢查資料更新" } }
+      }
+    },
+    "settings.etaFormat" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "ETA display" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "到站時間顯示" } }
+      }
+    },
+    "settings.etaFormat.diff" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Minutes" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "到站時差" } }
+      }
+    },
+    "settings.etaFormat.exact" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clock time" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "到站時間" } }
+      }
+    },
+    "settings.etaFormat.mixed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clock time + minutes" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "到站時間（到站時差）" } }
+      }
+    },
+    "settings.general" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "一般" } }
+      }
+    },
+    "settings.language" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "語言" } }
+      }
+    },
+    "settings.language.system" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "System" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "跟隨系統" } }
+      }
+    },
+    "settings.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "設定" } }
+      }
+    },
+    "settings.version" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "版本" } }
+      }
+    },
+    "status.checkingUpdate" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking for updates..." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "正在檢查更新…" } }
+      }
+    },
+    "status.downloading" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Downloading route data..." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "正在下載路線資料…" } }
+      }
+    },
+    "status.loading" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading..." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "載入中…" } }
+      }
+    },
+    "status.processing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing route data..." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "正在處理路線資料…" } }
+      }
+    },
+    "stop.noRoutes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No routes serve this stop" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "此車站沒有路線" } }
+      }
+    },
+    "stop.section.routes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Routes at this stop" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "途經路線" } }
+      }
+    },
+    "tab.favorites" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }
+      }
+    },
+    "tab.nearby" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearby" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "附近" } }
+      }
+    },
+    "tab.search" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "搜尋" } }
+      }
+    },
+    "tab.settings" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "設定" } }
+      }
+    },
+    "unit.minutes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "min" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "分鐘" } }
+      }
+    },
+    "unit.routes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "routes" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "條路線" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

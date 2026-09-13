@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build iOS app
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build for iOS Simulator
+        run: |
+          xcodebuild \
+            -project HKBusETA.xcodeproj \
+            -scheme HKBusETA \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Archive for iOS device (unsigned)
+        run: |
+          xcodebuild \
+            -project HKBusETA.xcodeproj \
+            -scheme HKBusETA \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/HKBusETA.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
