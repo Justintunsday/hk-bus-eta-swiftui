@@ -197,6 +197,20 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每" } }
       }
     },
+    "route.fare" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fare" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "收費" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "收费" } }
+      }
+    },
+    "route.fullEta" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Full ETA" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "完整到站時間" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完整到站时间" } }
+      }
+    },
     "route.notFound" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Route not found" } },
@@ -496,6 +510,13 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "routes" } },
         "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "條路線" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "条路线" } }
+      }
+    },
+    "unit.stops" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "stops" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "個站" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "个站" } }
       }
     }
   },
