@@ -115,7 +115,7 @@ struct StopBoardRowView: View {
                 Text("\(L10n.t("route.to")) \(item.entry.dest.name(language))")
                     .font(.body)
                     .lineLimit(1)
-                CompanyTags(co: item.entry.co, language: language)
+                CompanyLogos(co: item.entry.co, language: language, height: 13)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

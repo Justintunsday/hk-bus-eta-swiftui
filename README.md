@@ -55,6 +55,7 @@ Warm Minimal 方向（參考 [swiftui-design-skill](https://github.com/Wholiver/
 
 - 到站預報：來自 [資料一站通 DATA.GOV.HK](https://data.gov.hk) 及各營運商 API（九巴、城巴、嶼巴、綠色小巴、港鐵巴士、輕鐵、港鐵）
 - 路線、車站、收費、班次：來自 [HK Bus Crawling@2021](https://github.com/hkbus/hk-bus-crawling)（每日更新，`https://data.hkbus.app/routeFareList.min.json`）
+- 營運商站牌圖示：來自 [hk-independent-bus-eta](https://github.com/hkbus/hk-independent-bus-eta) `public/img`（GPL-3.0）
 - 資料只在首次啟動及每日檢查更新時下載，之後使用本機快取。
 
 ## 免責聲明 Disclaimer

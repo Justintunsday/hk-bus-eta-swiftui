@@ -93,10 +93,13 @@ struct SearchView: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(recent.destZh) : recent.destEn)")
                                             .lineLimit(1)
-                                        Text(language.isChinese ? L10n.display(recent.stopNameZh) : recent.stopNameEn)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .lineLimit(1)
+                                        HStack(spacing: 6) {
+                                            Text(language.isChinese ? L10n.display(recent.stopNameZh) : recent.stopNameEn)
+                                                .lineLimit(1)
+                                            CompanyLogos(co: app.data.entry(recent.routeKey)?.co ?? recent.co, language: language, height: 12)
+                                        }
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                     }
                                 }
                             }
@@ -172,10 +175,10 @@ struct RouteResultRow: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                HStack(spacing: 4) {
+                HStack(spacing: 6) {
                     Text(entry.orig.name(language))
                     Text("·")
-                    CompanyTags(co: entry.co, language: language)
+                    CompanyLogos(co: entry.co, language: language, height: 14)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

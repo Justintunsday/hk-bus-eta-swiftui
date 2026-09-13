@@ -83,14 +83,3 @@ struct RouteBadge: View {
             .lineLimit(1)
     }
 }
-
-struct CompanyTags: View {
-    let co: [String]
-    let language: AppLanguage
-
-    var body: some View {
-        Text(co.compactMap { Company(rawValue: $0)?.name(language) }.joined(separator: "+"))
-            .font(.caption)
-            .foregroundStyle(.secondary)
-    }
-}

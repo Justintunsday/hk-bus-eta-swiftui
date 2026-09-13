@@ -66,10 +66,10 @@ struct FavoritesView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(favorite.destZh) : favorite.destEn)")
                     .lineLimit(1)
-                HStack(spacing: 4) {
+                HStack(spacing: 6) {
                     Text(language.isChinese ? L10n.display(favorite.origZh) : favorite.origEn)
                     Text("·")
-                    CompanyTags(co: favorite.co, language: language)
+                    CompanyLogos(co: favorite.co, language: language, height: 13)
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
