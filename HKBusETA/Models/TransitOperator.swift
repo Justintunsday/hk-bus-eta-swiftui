@@ -59,7 +59,7 @@ enum TransportFilter: String, CaseIterable, Identifiable, Sendable {
         case .bus: return zh ? "巴士" : "Bus"
         case .minibus: return zh ? "小巴" : "Minibus"
         case .lightRail: return zh ? "輕鐵" : "Light Rail"
-        case .mtr: return zh ? "港鐵" : "MTR"
+        case .mtr: return zh ? "鐵路" : "Railway"
         case .ferry: return zh ? "渡輪" : "Ferry"
         }
     }

@@ -19,6 +19,15 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: CheLaile client smoke test
+        continue-on-error: true
+        run: |
+          xcrun swiftc -parse-as-library -O \
+            HKBusETA/Services/CheLaileClient.swift \
+            scripts/chelaile_smoke.swift \
+            -o "$RUNNER_TEMP/chelaile_smoke"
+          "$RUNNER_TEMP/chelaile_smoke"
+
       - name: Build for iOS Simulator
         run: |
           xcodebuild() {

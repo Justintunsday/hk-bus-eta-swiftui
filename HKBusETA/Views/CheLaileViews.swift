@@ -21,7 +21,7 @@ struct CheLaileLineLoaderView: View {
                 }
             } else if failed {
                 ContentUnavailableView {
-                    Label(L10n.t("route.notFound"), systemImage: "exclamationmark.triangle")
+                    Label(L10n.t("chelaile.loadFailed"), systemImage: "exclamationmark.triangle")
                 } actions: {
                     Button(L10n.t("common.retry")) {
                         failed = false
