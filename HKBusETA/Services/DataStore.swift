@@ -57,6 +57,7 @@ final class DataStore {
     /// AMap base data or the legacy mainland fallback).
     private var syntheticEntries: [String: RouteEntry] = [:]
     private var syntheticStops: [String: StopEntry] = [:]
+    private var syntheticMainlandMetadata: [String: MainlandRouteMetadata] = [:]
 
     let provider: any TransitProvider
 
@@ -295,10 +296,19 @@ final class DataStore {
 
     /// Registers a runtime-synthesized entry (query-mode providers) so the
     /// shared route / ETA screens can resolve it like a database entry.
-    func registerSynthetic(entry: RouteEntry, stops: [String: StopEntry]) {
+    func registerSynthetic(
+        entry: RouteEntry,
+        stops: [String: StopEntry],
+        mainlandMetadata: MainlandRouteMetadata? = nil
+    ) {
         syntheticEntries[entry.routeKey] = entry
         for (key, value) in stops {
             syntheticStops[key] = value
+        }
+        if let mainlandMetadata {
+            syntheticMainlandMetadata[entry.routeKey] = mainlandMetadata
+        } else {
+            syntheticMainlandMetadata.removeValue(forKey: entry.routeKey)
         }
     }
 
@@ -308,6 +318,10 @@ final class DataStore {
 
     func stop(_ id: String) -> StopEntry? {
         syntheticStops[id] ?? db?.stopList[id]
+    }
+
+    func mainlandMetadata(for routeKey: String) -> MainlandRouteMetadata? {
+        syntheticMainlandMetadata[routeKey]
     }
 
     func stopName(_ id: String, _ language: AppLanguage) -> String {

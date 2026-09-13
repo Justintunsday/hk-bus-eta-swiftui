@@ -201,9 +201,24 @@ struct MainlandBoardLine: Identifiable, Codable, Hashable, Sendable {
 
 struct MainlandTransitLine: Identifiable, Codable, Hashable, Sendable {
     let id: String
+    let lineID: String
     let name: String
     let mode: MainlandTransitMode
     let color: String?
+
+    init(
+        id: String,
+        lineID: String? = nil,
+        name: String,
+        mode: MainlandTransitMode,
+        color: String? = nil
+    ) {
+        self.id = id
+        self.lineID = lineID ?? id
+        self.name = name
+        self.mode = mode
+        self.color = color
+    }
 }
 
 struct MainlandStopBoardResult: Codable, Hashable, Sendable {
@@ -235,6 +250,27 @@ struct MainlandLinePayload: Codable, Hashable, Sendable {
     var stopIDs: [String] {
         stops.map(\.stopID)
     }
+
+    var routeMetadata: MainlandRouteMetadata {
+        MainlandRouteMetadata(
+            mode: line.mode,
+            firstDeparture: line.firstDeparture,
+            lastDeparture: line.lastDeparture,
+            fare: line.fare,
+            source: source
+        )
+    }
+}
+
+/// Metadata that is not represented by the shared legacy `RouteEntry` model.
+/// Query-mode routes keep this beside their synthetic entry so the standard
+/// route screens can still show service hours and mode-specific behavior.
+struct MainlandRouteMetadata: Codable, Hashable, Sendable {
+    let mode: MainlandTransitMode
+    let firstDeparture: String?
+    let lastDeparture: String?
+    let fare: String?
+    let source: MainlandDataSource
 }
 
 /// A small identity model useful when adapting a payload into an existing
@@ -247,6 +283,32 @@ struct MainlandRouteIdentity: Codable, Hashable, Sendable {
 }
 
 extension MainlandLinePayload {
+    func applying(modeHint: MainlandTransitMode?) -> MainlandLinePayload {
+        guard let modeHint, modeHint != line.mode else { return self }
+        let updatedLine = MainlandLineSummary(
+            id: line.id,
+            lineID: line.lineID,
+            name: line.name,
+            origin: line.origin,
+            destination: line.destination,
+            operatorName: line.operatorName,
+            mode: modeHint,
+            serviceStatus: line.serviceStatus,
+            firstDeparture: line.firstDeparture,
+            lastDeparture: line.lastDeparture,
+            fare: line.fare,
+            city: line.city,
+            source: line.source
+        )
+        return MainlandLinePayload(
+            line: updatedLine,
+            stops: stops,
+            polyline: polyline,
+            coordinateSystem: coordinateSystem,
+            source: source
+        )
+    }
+
     var routeIdentity: MainlandRouteIdentity {
         MainlandRouteIdentity(
             lineID: line.lineID,
@@ -272,7 +334,10 @@ protocol MainlandTransitProvider: Sendable {
     func search(keyword: String) async throws -> MainlandSearchResults
     func nearby(latitude: Double, longitude: Double, limit: Int) async throws -> [MainlandNearbyStop]
     func stopBoard(stopID: String, namesakeStopID: String?) async throws -> MainlandStopBoardResult
-    func linePayload(lineID: String) async throws -> MainlandLinePayload?
+    func linePayload(
+        lineID: String,
+        modeHint: MainlandTransitMode?
+    ) async throws -> MainlandLinePayload?
 
     /// A base-data provider may implement this by forwarding to an injected
     /// real-time provider, or by throwing `realtimeUnavailable`.
@@ -280,13 +345,70 @@ protocol MainlandTransitProvider: Sendable {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
-        language: AppLanguage
+        language: AppLanguage,
+        modeHint: MainlandTransitMode?
     ) async throws -> [Eta]
 }
 
 extension MainlandTransitProvider {
+    func linePayload(lineID: String) async throws -> MainlandLinePayload? {
+        try await linePayload(lineID: lineID, modeHint: nil)
+    }
+
+    func fetchEtas(
+        lineID: String,
+        stopID: String,
+        stopSequence: Int?,
+        language: AppLanguage
+    ) async throws -> [Eta] {
+        try await fetchEtas(
+            lineID: lineID,
+            stopID: stopID,
+            stopSequence: stopSequence,
+            language: language,
+            modeHint: nil
+        )
+    }
+
     func nearby(latitude: Double, longitude: Double) async throws -> [MainlandNearbyStop] {
         try await nearby(latitude: latitude, longitude: longitude, limit: 20)
+    }
+}
+
+/// Mainland uses the shared filter picker, but only bus and metro have a
+/// meaningful mainland mapping. Stops belong to the bus search result; metro
+/// search deliberately suppresses ordinary bus stop hits.
+enum MainlandSearchFiltering {
+    static func apply(
+        _ filter: TransportFilter,
+        to results: MainlandSearchResults
+    ) -> MainlandSearchResults {
+        switch filter {
+        case .all:
+            return results
+        case .bus:
+            return MainlandSearchResults(
+                lines: results.lines.filter { $0.mode != .metro },
+                stops: results.stops
+            )
+        case .mtr:
+            return MainlandSearchResults(
+                lines: results.lines.filter { $0.mode == .metro },
+                stops: []
+            )
+        case .minibus, .lightRail, .ferry:
+            return .empty
+        }
+    }
+
+    static func isSupported(_ filter: TransportFilter) -> Bool {
+        filter == .all || filter == .bus || filter == .mtr
+    }
+}
+
+enum MainlandRealtimePolicy {
+    static func allowsRequest(modeHint: MainlandTransitMode?) -> Bool {
+        modeHint != .metro
     }
 }
 
@@ -298,7 +420,8 @@ protocol MainlandRealtimeProvider: Sendable {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
-        language: AppLanguage
+        language: AppLanguage,
+        modeHint: MainlandTransitMode?
     ) async throws -> [Eta]
 }
 
@@ -354,17 +477,22 @@ struct MainlandProviderRouter: MainlandTransitProvider {
         }
     }
 
-    func linePayload(lineID: String) async throws -> MainlandLinePayload? {
+    func linePayload(
+        lineID: String,
+        modeHint: MainlandTransitMode?
+    ) async throws -> MainlandLinePayload? {
         do {
-            if let payload = try await primary.linePayload(lineID: lineID) {
+            if let payload = try await primary.linePayload(lineID: lineID, modeHint: modeHint) {
                 return payload
             }
             if let fallback {
-                return try await fallback.linePayload(lineID: lineID)
+                return try await fallback.linePayload(lineID: lineID, modeHint: modeHint)
             }
             return nil
         } catch {
-            return try await fallbackOrRethrow(error) { try await $0.linePayload(lineID: lineID) }
+            return try await fallbackOrRethrow(error) {
+                try await $0.linePayload(lineID: lineID, modeHint: modeHint)
+            }
         }
     }
 
@@ -372,7 +500,8 @@ struct MainlandProviderRouter: MainlandTransitProvider {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
-        language: AppLanguage
+        language: AppLanguage,
+        modeHint: MainlandTransitMode?
     ) async throws -> [Eta] {
         if let realtime {
             do {
@@ -380,7 +509,8 @@ struct MainlandProviderRouter: MainlandTransitProvider {
                     lineID: lineID,
                     stopID: stopID,
                     stopSequence: stopSequence,
-                    language: language
+                    language: language,
+                    modeHint: modeHint
                 )
             } catch {
                 if fallback == nil || !Self.isFallbackEligible(error) {
@@ -394,7 +524,8 @@ struct MainlandProviderRouter: MainlandTransitProvider {
                 lineID: lineID,
                 stopID: stopID,
                 stopSequence: stopSequence,
-                language: language
+                language: language,
+                modeHint: modeHint
             )
         }
 
@@ -403,7 +534,8 @@ struct MainlandProviderRouter: MainlandTransitProvider {
                 lineID: lineID,
                 stopID: stopID,
                 stopSequence: stopSequence,
-                language: language
+                language: language,
+                modeHint: modeHint
             )
         }
 

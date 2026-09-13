@@ -6,6 +6,14 @@ import Foundation
 /// through the same UI boundary.
 enum MainlandErrorPresentation {
     static func message(for error: Error) -> String {
+        if let mainlandError = error as? MainlandProviderError {
+            switch mainlandError {
+            case .noData:
+                return L10n.t("mainland.metroPayloadUnavailable")
+            default:
+                break
+            }
+        }
         let description = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !description.isEmpty,
               description != "The operation couldn’t be completed." else {

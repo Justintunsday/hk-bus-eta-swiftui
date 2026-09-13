@@ -66,6 +66,12 @@ struct StopEtaInlineView: View {
     @State private var isLoading = false
 
     private var language: AppLanguage { L10n.language }
+    private var mainlandMetadata: MainlandRouteMetadata? {
+        app.data.mainlandMetadata(for: entry.routeKey)
+    }
+    private var isMainlandMetro: Bool {
+        !MainlandRealtimePolicy.allowsRequest(modeHint: mainlandMetadata?.mode)
+    }
 
     private var stopId: String? {
         let stops = entry.canonicalStops
@@ -79,14 +85,18 @@ struct StopEtaInlineView: View {
                 HStack(spacing: DesignTokens.Spacing.xs) {
                     Text(L10n.t("route.fare"))
                         .foregroundStyle(.secondary)
-                    Text("$\(fare)")
+                    Text("\(isMainlandMetro ? "¥" : "$")\(fare)")
                         .fontWeight(.medium)
                         .monospacedDigit()
                 }
                 .font(.caption)
             }
 
-            if isLoading && etas.isEmpty {
+            if isMainlandMetro {
+                Label(L10n.t("mainland.metroNoRealtime"), systemImage: "tram.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if isLoading && etas.isEmpty {
                 ProgressView()
                     .controlSize(.small)
             } else if etas.isEmpty {
@@ -108,11 +118,13 @@ struct StopEtaInlineView: View {
             }
 
             HStack(spacing: DesignTokens.Spacing.m) {
-                NavigationLink(value: RouteEtaTarget(routeKey: entry.routeKey, seq: seq)) {
-                    Label(L10n.t("route.fullEta"), systemImage: "clock.arrow.circlepath")
-                        .font(.caption)
+                if !isMainlandMetro {
+                    NavigationLink(value: RouteEtaTarget(routeKey: entry.routeKey, seq: seq)) {
+                        Label(L10n.t("route.fullEta"), systemImage: "clock.arrow.circlepath")
+                            .font(.caption)
+                    }
+                    .tint(DesignTokens.accent)
                 }
-                .tint(DesignTokens.accent)
 
                 if let stopId, let stop = app.data.stop(stopId) {
                     let isFavorite = app.bookmarks.isFavoriteStop(stopId)
@@ -137,12 +149,14 @@ struct StopEtaInlineView: View {
             in: RoundedRectangle(cornerRadius: DesignTokens.Radius.m, style: .continuous)
         )
         .task(id: "\(entry.routeKey)#\(seq)") {
-            while !Task.isCancelled {
-                await refresh()
-                do {
-                    try await Task.sleep(nanoseconds: 30_000_000_000)
-                } catch {
-                    break
+            if !isMainlandMetro {
+                while !Task.isCancelled {
+                    await refresh()
+                    do {
+                        try await Task.sleep(nanoseconds: 30_000_000_000)
+                    } catch {
+                        break
+                    }
                 }
             }
         }
@@ -150,9 +164,27 @@ struct StopEtaInlineView: View {
 
     private func refresh() async {
         guard let db = app.data.db else { return }
+        guard !isMainlandMetro else { return }
         if etas.isEmpty { isLoading = true }
-        let result = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)
-        etas = result
+        if let mainland = app.mainlandProvider {
+            guard let stopIDs = entry.stops["mainland"] ?? entry.stops["chelaile"],
+                  seq >= 0, seq < stopIDs.count,
+                  let lineID = entry.gtfsId?.value, !lineID.isEmpty
+            else {
+                etas = []
+                isLoading = false
+                return
+            }
+            etas = (try? await mainland.fetchEtas(
+                lineID: lineID,
+                stopID: stopIDs[seq],
+                stopSequence: seq,
+                language: language,
+                modeHint: mainlandMetadata?.mode
+            )) ?? []
+        } else {
+            etas = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)
+        }
         isLoading = false
     }
 }

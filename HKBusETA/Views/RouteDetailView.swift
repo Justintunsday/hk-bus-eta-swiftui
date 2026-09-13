@@ -17,6 +17,12 @@ struct RouteDetailView: View {
                         header(entry)
                     }
 
+                    if let mainlandMetadata = app.data.mainlandMetadata(for: routeKey) {
+                        Section {
+                            MainlandRouteOverview(metadata: mainlandMetadata)
+                        }
+                    }
+
                     if points.contains(where: { $0.coordinate != nil }) {
                         Section {
                             RouteMapSection(entry: entry, points: points, selectedSeq: $selectedSeq)
@@ -124,7 +130,8 @@ struct RouteDetailView: View {
                 if let journey = entry.journeyTimeMinutes {
                     labeled("hourglass", "\(journey) \(L10n.t("unit.minutes"))")
                 }
-                if let fare = app.provider.fare(entry: entry, at: 0, db: app.data.db ?? EtaDB.empty, at: Date()) {
+                if app.data.mainlandMetadata(for: entry.routeKey) == nil,
+                   let fare = app.provider.fare(entry: entry, at: 0, db: app.data.db ?? EtaDB.empty, at: Date()) {
                     labeled("dollarsign.circle", "$\(fare)")
                 }
             }

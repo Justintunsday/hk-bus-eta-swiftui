@@ -86,11 +86,14 @@ struct AMapTransitProvider: MainlandTransitProvider {
 
     // MARK: Line detail
 
-    func linePayload(lineID: String) async throws -> MainlandLinePayload? {
+    func linePayload(
+        lineID: String,
+        modeHint: MainlandTransitMode?
+    ) async throws -> MainlandLinePayload? {
         let records = try await client.lineDetail(lineID: lineID, city: city)
-        guard let record = records.first else { return nil }
+        guard let record = records.first, !record.stops.isEmpty else { return nil }
 
-        let line = makeLineSummary(record)
+        let line = makeLineSummary(record, modeHint: modeHint)
         let stops = record.stops.enumerated().map { index, stop in
             makeStopSummary(stop, fallbackSequence: index + 1)
         }
@@ -109,14 +112,18 @@ struct AMapTransitProvider: MainlandTransitProvider {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
-        language: AppLanguage
+        language: AppLanguage,
+        modeHint: MainlandTransitMode?
     ) async throws -> [Eta] {
         throw MainlandProviderError.realtimeUnavailable(source: id)
     }
 
     // MARK: Mapping
 
-    private func makeLineSummary(_ record: AMapLineRecord) -> MainlandLineSummary {
+    private func makeLineSummary(
+        _ record: AMapLineRecord,
+        modeHint: MainlandTransitMode? = nil
+    ) -> MainlandLineSummary {
         let lineID = record.id.isEmpty ? record.name : record.id
         return MainlandLineSummary(
             id: lineID,
@@ -125,7 +132,7 @@ struct AMapTransitProvider: MainlandTransitProvider {
             origin: record.origin,
             destination: record.destination,
             operatorName: record.operatorName,
-            mode: Self.mode(for: record.type),
+            mode: modeHint ?? Self.mode(for: record.type),
             serviceStatus: record.serviceStatus,
             firstDeparture: record.firstDeparture,
             lastDeparture: record.lastDeparture,

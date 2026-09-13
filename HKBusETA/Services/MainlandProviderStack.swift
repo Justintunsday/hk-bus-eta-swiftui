@@ -82,21 +82,26 @@ struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
         try await router.stopBoard(stopID: stopID, namesakeStopID: namesakeStopID)
     }
 
-    func linePayload(lineID: String) async throws -> MainlandLinePayload? {
-        try await router.linePayload(lineID: lineID)
+    func linePayload(
+        lineID: String,
+        modeHint: MainlandTransitMode?
+    ) async throws -> MainlandLinePayload? {
+        try await router.linePayload(lineID: lineID, modeHint: modeHint)
     }
 
     func fetchEtas(
         lineID: String,
         stopID: String,
         stopSequence: Int?,
-        language: AppLanguage
+        language: AppLanguage,
+        modeHint: MainlandTransitMode?
     ) async throws -> [Eta] {
         try await router.fetchEtas(
             lineID: lineID,
             stopID: stopID,
             stopSequence: stopSequence,
-            language: language
+            language: language,
+            modeHint: modeHint
         )
     }
 
@@ -112,7 +117,8 @@ struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
             lineID: lineID,
             stopID: stopIDs[seq],
             stopSequence: seq,
-            language: language
+            language: language,
+            modeHint: nil
         )) ?? []
     }
 }

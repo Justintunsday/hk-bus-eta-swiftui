@@ -21,6 +21,12 @@ struct RouteEtaView: View {
                         header(entry)
                     }
 
+                    if let mainlandMetadata = app.data.mainlandMetadata(for: routeKey) {
+                        Section {
+                            MainlandRouteOverview(metadata: mainlandMetadata)
+                        }
+                    }
+
                     etaSection(entry)
 
                     if etas.isEmpty, !isLoading {
@@ -50,12 +56,16 @@ struct RouteEtaView: View {
                 .refreshable { await refresh() }
                 .task(id: "\(routeKey)#\(seq)") {
                     recordRecent(entry)
-                    while !Task.isCancelled {
-                        await refresh()
-                        do {
-                            try await Task.sleep(nanoseconds: refreshInterval)
-                        } catch {
-                            break
+                    if MainlandRealtimePolicy.allowsRequest(
+                        modeHint: app.data.mainlandMetadata(for: routeKey)?.mode
+                    ) {
+                        while !Task.isCancelled {
+                            await refresh()
+                            do {
+                                try await Task.sleep(nanoseconds: refreshInterval)
+                            } catch {
+                                break
+                            }
                         }
                     }
                 }
@@ -101,7 +111,8 @@ struct RouteEtaView: View {
                         .fontWeight(.medium)
                 }
                 Spacer()
-                if let fare = app.provider.fare(entry: entry, at: seq, db: app.data.db ?? .empty, at: Date()) {
+                if app.data.mainlandMetadata(for: routeKey) == nil,
+                   let fare = app.provider.fare(entry: entry, at: seq, db: app.data.db ?? .empty, at: Date()) {
                     Text("$\(fare)")
                         .font(.subheadline)
                         .monospacedDigit()
@@ -116,7 +127,16 @@ struct RouteEtaView: View {
 
     @ViewBuilder
     private func etaSection(_ entry: RouteEntry) -> some View {
-        if isLoading && etas.isEmpty {
+        let mainlandMode = app.data.mainlandMetadata(for: routeKey)?.mode
+        if !MainlandRealtimePolicy.allowsRequest(modeHint: mainlandMode) {
+            Section {
+                Label(
+                    L10n.t(mainlandMode == .metro ? "mainland.metroNoRealtime" : "error.mainland.realtimeUnavailable"),
+                    systemImage: "tram.fill"
+                )
+                    .foregroundStyle(.secondary)
+            }
+        } else if isLoading && etas.isEmpty {
             Section {
                 HStack(spacing: DesignTokens.Spacing.s) {
                     ProgressView()
@@ -276,6 +296,13 @@ struct RouteEtaView: View {
 
     private func refresh() async {
         guard let entry = app.data.entry(routeKey), let db = app.data.db else { return }
+        let mainlandMetadata = app.data.mainlandMetadata(for: routeKey)
+        if !MainlandRealtimePolicy.allowsRequest(modeHint: mainlandMetadata?.mode) {
+            etas = []
+            etaError = nil
+            isLoading = false
+            return
+        }
         if etas.isEmpty { isLoading = true }
         do {
             let result: [Eta]
@@ -290,7 +317,8 @@ struct RouteEtaView: View {
                     lineID: lineID,
                     stopID: stopIDs[seq],
                     stopSequence: seq,
-                    language: language
+                    language: language,
+                    modeHint: mainlandMetadata?.mode
                 )
             } else {
                 result = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)

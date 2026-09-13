@@ -7,9 +7,37 @@ struct MainlandLineLoaderView: View {
     let lineId: String
     let title: String
     let seq: Int?
+    let modeHint: MainlandTransitMode
+    let origin: String?
+    let destination: String?
+    let firstDeparture: String?
+    let lastDeparture: String?
+    let fare: String?
 
     @State private var routeKey: String?
-    @State private var failed = false
+    @State private var errorMessage: String?
+
+    init(
+        lineId: String,
+        title: String,
+        seq: Int? = nil,
+        modeHint: MainlandTransitMode = .bus,
+        origin: String? = nil,
+        destination: String? = nil,
+        firstDeparture: String? = nil,
+        lastDeparture: String? = nil,
+        fare: String? = nil
+    ) {
+        self.lineId = lineId
+        self.title = title
+        self.seq = seq
+        self.modeHint = modeHint
+        self.origin = origin
+        self.destination = destination
+        self.firstDeparture = firstDeparture
+        self.lastDeparture = lastDeparture
+        self.fare = fare
+    }
 
     var body: some View {
         Group {
@@ -19,14 +47,26 @@ struct MainlandLineLoaderView: View {
                 } else {
                     RouteDetailView(routeKey: routeKey)
                 }
-            } else if failed {
+            } else if let errorMessage, modeHint == .metro {
+                MainlandMetroInfoView(
+                    name: title,
+                    origin: origin ?? "",
+                    destination: destination ?? "",
+                    firstDeparture: firstDeparture,
+                    lastDeparture: lastDeparture,
+                    fare: fare,
+                    errorMessage: errorMessage,
+                    onRetry: retry
+                )
+            } else if errorMessage != nil {
                 ContentUnavailableView {
                     Label(L10n.t("mainland.loadFailed"), systemImage: "exclamationmark.triangle")
-                } actions: {
-                    Button(L10n.t("common.retry")) {
-                        failed = false
-                        Task { await load() }
+                } description: {
+                    if let errorMessage {
+                        Text(errorMessage)
                     }
+                } actions: {
+                    Button(L10n.t("common.retry"), action: retry)
                 }
             } else {
                 VStack(spacing: DesignTokens.Spacing.m) {
@@ -45,23 +85,36 @@ struct MainlandLineLoaderView: View {
 
     private func load() async {
         guard let provider = app.mainlandProvider else {
-            failed = true
+            errorMessage = L10n.t("error.mainland.requestFailed")
             return
         }
         do {
-            guard let payload = try await provider.linePayload(lineID: lineId) else {
-                failed = true
+            guard let payload = try await provider.linePayload(lineID: lineId, modeHint: modeHint) else {
+                errorMessage = MainlandErrorPresentation.message(for: MainlandProviderError.noData)
                 return
             }
+            let payload = payload.applying(modeHint: modeHint)
             guard let shared = MainlandRouteAdapter.makeSharedRoute(from: payload) else {
-                failed = true
+                errorMessage = MainlandErrorPresentation.message(for: MainlandProviderError.noData)
                 return
             }
-            app.data.registerSynthetic(entry: shared.entry, stops: shared.stops)
+            app.data.registerSynthetic(
+                entry: shared.entry,
+                stops: shared.stops,
+                mainlandMetadata: shared.metadata
+            )
             routeKey = shared.entry.routeKey
         } catch {
-            failed = true
+            guard !Task.isCancelled else { return }
+            errorMessage = MainlandErrorPresentation.message(for: error)
         }
+    }
+
+    private func retry() {
+        // Returning to the loading branch lets its `.task` perform exactly
+        // one request; starting a second detached task here can duplicate the
+        // line-detail request.
+        errorMessage = nil
     }
 }
 
@@ -71,6 +124,31 @@ struct MainlandMetroInfoView: View {
     let name: String
     let origin: String
     let destination: String
+    let firstDeparture: String?
+    let lastDeparture: String?
+    let fare: String?
+    let errorMessage: String
+    var onRetry: (() -> Void)? = nil
+
+    init(
+        name: String,
+        origin: String,
+        destination: String,
+        firstDeparture: String? = nil,
+        lastDeparture: String? = nil,
+        fare: String? = nil,
+        errorMessage: String,
+        onRetry: (() -> Void)? = nil
+    ) {
+        self.name = name
+        self.origin = origin
+        self.destination = destination
+        self.firstDeparture = firstDeparture
+        self.lastDeparture = lastDeparture
+        self.fare = fare
+        self.errorMessage = errorMessage
+        self.onRetry = onRetry
+    }
 
     var body: some View {
         List {
@@ -78,10 +156,29 @@ struct MainlandMetroInfoView: View {
                 LabeledContent(L10n.t("mainland.metroStart"), value: origin)
                 LabeledContent(L10n.t("mainland.metroEnd"), value: destination)
             }
+            if let firstDeparture, !firstDeparture.isEmpty {
+                LabeledContent(L10n.t("mainland.firstDeparture"), value: firstDeparture)
+            }
+            if let lastDeparture, !lastDeparture.isEmpty {
+                LabeledContent(L10n.t("mainland.lastDeparture"), value: lastDeparture)
+            }
+            if let fare, !fare.isEmpty {
+                LabeledContent(L10n.t("route.fare"), value: "¥\(fare)")
+            }
             Section {
-                Text(L10n.t("mainland.metroNotice"))
+                Label(L10n.t("mainland.metroPayloadUnavailable"), systemImage: "exclamationmark.triangle")
+                Text(errorMessage)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+            Section {
+                Label(L10n.t("mainland.metroNoRealtime"), systemImage: "tram.fill")
+                    .foregroundStyle(.secondary)
+            }
+            if let onRetry {
+                Section {
+                    Button(L10n.t("common.retry"), action: onRetry)
+                }
             }
         }
         .navigationTitle(name)
@@ -146,11 +243,17 @@ struct MainlandStopBoardView: View {
                     if !otherLines.isEmpty {
                         Section(L10n.t("mainland.metros")) {
                             ForEach(otherLines) { metro in
-                                HStack(spacing: DesignTokens.Spacing.s) {
-                                    Circle()
-                                        .fill(metroColor(metro.color))
-                                        .frame(width: 9, height: 9)
-                                    Text(metro.name)
+                                NavigationLink(value: MainlandLineTarget(
+                                    lineId: metro.lineID,
+                                    title: metro.name,
+                                    modeHint: metro.mode
+                                )) {
+                                    HStack(spacing: DesignTokens.Spacing.s) {
+                                        Circle()
+                                            .fill(metroColor(metro.color))
+                                            .frame(width: 9, height: 9)
+                                        Text(metro.name)
+                                    }
                                 }
                             }
                         }

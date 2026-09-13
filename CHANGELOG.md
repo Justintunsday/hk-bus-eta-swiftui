@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 (build 5)
+
+- Mainland metro search results now load standard route details through the
+  active provider, with complete stop order and available service metadata.
+- Mainland search scopes now filter bus, metro, and unsupported Hong Kong-only
+  transport categories consistently; metro results no longer show bus stops.
+- Preserved metro mode through legacy line-detail fallback and disabled bus ETA
+  requests for mainland metro routes with an explicit no-realtime message.
+
 ## 1.1.2 (build 4)
 
 - Fixed the legacy mainland compatibility client incorrectly treating

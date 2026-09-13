@@ -24,7 +24,17 @@ struct NearbyView: View {
                 RouteEtaView(routeKey: target.routeKey, seq: target.seq)
             }
             .navigationDestination(for: MainlandLineTarget.self) { target in
-                MainlandLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
+                MainlandLineLoaderView(
+                    lineId: target.lineId,
+                    title: target.title,
+                    seq: target.seq,
+                    modeHint: target.modeHint,
+                    origin: target.origin,
+                    destination: target.destination,
+                    firstDeparture: target.firstDeparture,
+                    lastDeparture: target.lastDeparture,
+                    fare: target.fare
+                )
             }
             .navigationDestination(for: MainlandStopTarget.self) { target in
                 MainlandStopBoardView(stopID: target.stopID, namesakeStopID: target.namesakeStopID, title: target.title)

@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.1.2
+# Where My Bus Now (WMBN) · 1.2.0
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 

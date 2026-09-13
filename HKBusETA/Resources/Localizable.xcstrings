@@ -505,6 +505,34 @@
     "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此数据源不提供地铁沿途站点。" } }
   }
 },
+"mainland.metroPayloadUnavailable" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "The complete metro stop sequence is temporarily unavailable from this data source." } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "目前數據源未返回完整地鐵站序，已保留起訖站信息。" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前数据源未返回完整地铁站序，已保留起终点信息。" } }
+  }
+},
+"mainland.metroNoRealtime" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Metro realtime arrivals are not available yet." } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "地鐵目前沒有實時到站數據。" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "地铁目前没有实时到站数据。" } }
+  }
+},
+"mainland.firstDeparture" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "First departure" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "首班" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "首班" } }
+  }
+},
+"mainland.lastDeparture" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Last departure" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "末班" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "末班" } }
+  }
+},
 "mainland.metros" : {
   "localizations" : {
     "en" : { "stringUnit" : { "state" : "translated", "value" : "Metro" } },

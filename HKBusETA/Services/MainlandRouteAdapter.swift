@@ -6,7 +6,7 @@ import Foundation
 enum MainlandRouteAdapter {
     static func makeSharedRoute(
         from payload: MainlandLinePayload
-    ) -> (entry: RouteEntry, stops: [String: StopEntry])? {
+    ) -> (entry: RouteEntry, stops: [String: StopEntry], metadata: MainlandRouteMetadata)? {
         let stopIDs = payload.stops.map(\.stopID).filter { !$0.isEmpty }
         guard !stopIDs.isEmpty else { return nil }
 
@@ -43,7 +43,7 @@ enum MainlandRouteAdapter {
             gtfsId: FlexibleString(payload.line.lineID),
             nlbId: nil
         )
-        return (entry, stopEntries)
+        return (entry, stopEntries, payload.routeMetadata)
     }
 }
 

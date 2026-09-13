@@ -31,13 +31,20 @@ struct SearchView: View {
                 StopEtaView(stopId: target.stopId)
             }
             .navigationDestination(for: MainlandLineTarget.self) { target in
-                MainlandLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
+                MainlandLineLoaderView(
+                    lineId: target.lineId,
+                    title: target.title,
+                    seq: target.seq,
+                    modeHint: target.modeHint,
+                    origin: target.origin,
+                    destination: target.destination,
+                    firstDeparture: target.firstDeparture,
+                    lastDeparture: target.lastDeparture,
+                    fare: target.fare
+                )
             }
             .navigationDestination(for: MainlandStopTarget.self) { target in
                 MainlandStopBoardView(stopID: target.stopID, namesakeStopID: target.namesakeStopID, title: target.title)
-            }
-            .navigationDestination(for: MainlandMetroTarget.self) { target in
-                MainlandMetroInfoView(name: target.name, origin: target.origin, destination: target.destination)
             }
         }
         .searchable(text: $query, prompt: Text(L10n.t("search.placeholder")))
@@ -119,14 +126,18 @@ struct SearchView: View {
                 if !mainlandLines.isEmpty {
                     Section(L10n.t("search.section.routes")) {
                         ForEach(mainlandLines) { hit in
-                            if hit.mode == .metro {
-                                NavigationLink(value: MainlandMetroTarget(name: hit.name, origin: hit.origin, destination: hit.destination)) {
-                                    MainlandLineRow(hit: hit)
-                                }
-                            } else {
-                                NavigationLink(value: MainlandLineTarget(lineId: hit.lineID, title: hit.name, seq: nil)) {
-                                    MainlandLineRow(hit: hit)
-                                }
+                            NavigationLink(value: MainlandLineTarget(
+                                lineId: hit.lineID,
+                                title: hit.name,
+                                seq: nil,
+                                modeHint: hit.mode,
+                                origin: hit.origin,
+                                destination: hit.destination,
+                                firstDeparture: hit.firstDeparture,
+                                lastDeparture: hit.lastDeparture,
+                                fare: hit.fare
+                            )) {
+                                MainlandLineRow(hit: hit)
                             }
                         }
                     }
@@ -226,11 +237,18 @@ struct SearchView: View {
                 isSearching = true
                 defer { isSearching = false }
                 do {
+                    guard MainlandSearchFiltering.isSupported(filter) else {
+                        mainlandLines = []
+                        mainlandStops = []
+                        mainlandError = nil
+                        return
+                    }
                     let results = try await provider.search(keyword: query)
+                    let filtered = MainlandSearchFiltering.apply(filter, to: results)
                     guard !Task.isCancelled else { return }
                     mainlandError = nil
-                    mainlandLines = results.lines
-                    mainlandStops = results.stops
+                    mainlandLines = filtered.lines
+                    mainlandStops = filtered.stops
                 } catch {
                     guard !Task.isCancelled else { return }
                     mainlandLines = []

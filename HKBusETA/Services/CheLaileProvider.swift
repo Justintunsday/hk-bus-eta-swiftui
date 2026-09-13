@@ -66,8 +66,12 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
         lineID: String,
         stopID: String,
         stopSequence: Int?,
-        language: AppLanguage
+        language: AppLanguage,
+        modeHint: MainlandTransitMode? = nil
     ) async throws -> [Eta] {
+        guard MainlandRealtimePolicy.allowsRequest(modeHint: modeHint) else {
+            throw MainlandProviderError.realtimeUnavailable(source: "legacy metro")
+        }
         try Task.checkCancellation()
         let detail = try await CheLaileClient().stopDetail(
             cityId: cityId,
@@ -206,7 +210,14 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
             for metro in station.metros ?? [] {
                 let name = metro.fullName ?? metro.lineNo ?? ""
                 guard !name.isEmpty, seenMetros.insert(name).inserted else { continue }
-                otherLines.append(MainlandTransitLine(id: name, name: name, mode: .metro, color: metro.color))
+                let lineID = metro.lineId ?? name
+                otherLines.append(MainlandTransitLine(
+                    id: lineID,
+                    lineID: lineID,
+                    name: name,
+                    mode: .metro,
+                    color: metro.color
+                ))
             }
             for item in station.lines ?? [] {
                 guard let line = item.line, let lineId = line.lineId, !lineId.isEmpty else { continue }
@@ -241,7 +252,10 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
 
     // MARK: - Line payload (synthesizes an EtaDB entry for the shared UI)
 
-    func linePayload(lineID: String) async throws -> MainlandLinePayload? {
+    func linePayload(
+        lineID: String,
+        modeHint: MainlandTransitMode? = nil
+    ) async throws -> MainlandLinePayload? {
         let detail = try await CheLaileClient().lineDetail(cityId: cityId, lineId: lineID, lat: nil, lng: nil)
         guard let line = detail.line, let stations = detail.stations, !stations.isEmpty else { return nil }
 
@@ -249,14 +263,14 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
         let origin = line.startSn ?? stations.first?.sn ?? ""
         let destination = line.endSn ?? stations.last?.sn ?? ""
 
-        var stopSummaries: [MainlandStopSummary] = []
-        for station in stations {
+        var stopSummaries: [(order: Int, index: Int, stop: MainlandStopSummary)] = []
+        for (index, station) in stations.enumerated() {
             guard let physical = station.physicalStId, !physical.isEmpty else { continue }
             let name = station.sn ?? physical
             let location = station.wgsLat.flatMap { lat in
                 station.wgsLng.flatMap { lng in MainlandCoordinate.wgs84(latitude: lat, longitude: lng) }
             }
-            stopSummaries.append(MainlandStopSummary(
+            let stop = MainlandStopSummary(
                 id: physical,
                 stopID: physical,
                 namesakeStopID: station.namesakeStId,
@@ -265,17 +279,27 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
                 location: location,
                 city: city,
                 source: .legacyFallback
-            ))
+            )
+            stopSummaries.append((station.order ?? Int.max, index, stop))
         }
-        guard !stopSummaries.isEmpty else { return nil }
+        let orderedStops = stopSummaries
+            .sorted { lhs, rhs in
+                if lhs.order != rhs.order { return lhs.order < rhs.order }
+                return lhs.index < rhs.index
+            }
+            .map(\.stop)
+        guard !orderedStops.isEmpty else { return nil }
         let summary = MainlandLineSummary(
             id: line.lineId ?? lineID,
             lineID: line.lineId ?? lineID,
             name: routeName,
-            origin: origin,
-            destination: destination,
+            origin: origin.isEmpty ? orderedStops.first?.name ?? "" : origin,
+            destination: destination.isEmpty ? orderedStops.last?.name ?? "" : destination,
             operatorName: nil,
-            mode: .bus,
+            // The detail endpoint does not carry the search result's mode.
+            // Preserve an explicit metro hint so it cannot fall through to
+            // the legacy bus ETA path later.
+            mode: modeHint ?? .bus,
             serviceStatus: nil,
             firstDeparture: line.firstTime,
             lastDeparture: line.lastTime,
@@ -285,8 +309,8 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
         )
         return MainlandLinePayload(
             line: summary,
-            stops: stopSummaries,
-            polyline: stopSummaries.compactMap(\MainlandStopSummary.location),
+            stops: orderedStops,
+            polyline: orderedStops.compactMap(\MainlandStopSummary.location),
             coordinateSystem: .wgs84,
             source: .legacyFallback
         )

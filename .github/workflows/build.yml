@@ -26,6 +26,7 @@ jobs:
             HKBusETA/Utilities/Localization.swift \
             HKBusETA/Models/EtaDB.swift \
             HKBusETA/Models/Eta.swift \
+            HKBusETA/Models/TransitOperator.swift \
             HKBusETA/Services/MainlandTransitProvider.swift \
             HKBusETA/Services/AMapClient.swift \
             HKBusETA/Services/AMapTransitProvider.swift \
