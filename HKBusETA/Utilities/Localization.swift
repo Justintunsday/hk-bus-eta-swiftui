@@ -2,6 +2,7 @@ import Foundation
 
 enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case system
+    case zhHans
     case zh
     case en
 
@@ -10,6 +11,7 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .system: return L10n.t("settings.language.system")
+        case .zhHans: return "简体中文"
         case .zh: return "繁體中文"
         case .en: return "English"
         }
@@ -19,23 +21,36 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     var resolved: AppLanguage {
         if self != .system { return self }
         let preferred = Locale.preferredLanguages.first ?? "en"
-        return preferred.hasPrefix("zh") ? .zh : .en
+        if preferred.hasPrefix("zh-Hans")
+            || preferred.hasPrefix("zh-CN")
+            || preferred.hasPrefix("zh-SG")
+            || preferred.hasPrefix("zh-MY") {
+            return .zhHans
+        }
+        if preferred.hasPrefix("zh") { return .zh }
+        return .en
+    }
+
+    /// Whether the resolved language displays Chinese text.
+    var isChinese: Bool {
+        let language = resolved
+        return language == .zh || language == .zhHans
     }
 
     var locale: Locale {
         switch resolved {
+        case .zhHans: return Locale(identifier: "zh_Hans_CN")
         case .zh: return Locale(identifier: "zh_Hant_HK")
-        case .en: return Locale(identifier: "en_HK")
-        case .system: return Locale.current
+        default: return Locale.current
         }
     }
 
     /// Strings table code, or nil to use the system default.
     var bundleCode: String? {
         switch resolved {
+        case .zhHans: return "zh-Hans"
         case .zh: return "zh-Hant"
-        case .en: return nil
-        case .system: return nil
+        default: return nil
         }
     }
 }
@@ -74,6 +89,11 @@ enum L10n {
 
     /// Language actually used for data display.
     static var language: AppLanguage { AppLanguage.current.resolved }
+
+    /// Converts Traditional Chinese data text for the current display language.
+    static func display(_ text: String) -> String {
+        language == .zhHans ? ChineseConverter.simplified(text) : text
+    }
 }
 
 enum HKTime {

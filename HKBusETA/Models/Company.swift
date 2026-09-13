@@ -45,7 +45,7 @@ enum Company: String, Codable, CaseIterable, Sendable, Identifiable {
     }
 
     func name(_ language: AppLanguage) -> String {
-        language == .zh ? nameZh : nameEn
+        language.isChinese ? L10n.display(nameZh) : nameEn
     }
 
     var isFerry: Bool {
@@ -114,7 +114,7 @@ enum TransportFilter: String, CaseIterable, Identifiable, Sendable {
     }
 
     func title(_ language: AppLanguage) -> String {
-        let zh = language.resolved == .zh
+        let zh = language.isChinese
         switch self {
         case .all: return zh ? "全部" : "All"
         case .bus: return zh ? "巴士" : "Bus"

@@ -28,7 +28,7 @@ struct Terminal: Codable, Hashable, Sendable {
     }
 
     func name(_ language: AppLanguage) -> String {
-        language == .zh ? zh : en
+        language.isChinese ? L10n.display(zh) : en
     }
 }
 

@@ -1,0 +1,13 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "HK Bus ETA" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "巴士預報" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "巴士预报" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

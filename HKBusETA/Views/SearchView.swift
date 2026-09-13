@@ -118,9 +118,9 @@ struct SearchView: View {
                                 HStack(spacing: 10) {
                                     RouteBadge(route: recent.route, entry: app.data.entry(recent.routeKey))
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("\(L10n.t("route.to")) \(language == .zh ? recent.destZh : recent.destEn)")
+                                        Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(recent.destZh) : recent.destEn)")
                                             .font(.subheadline)
-                                        Text(language == .zh ? recent.stopNameZh : recent.stopNameEn)
+                                        Text(language.isChinese ? L10n.display(recent.stopNameZh) : recent.stopNameEn)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
@@ -134,7 +134,7 @@ struct SearchView: View {
                         ForEach(app.bookmarks.recentStops) { recent in
                             NavigationLink(value: StopTarget(stopId: recent.id)) {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(language == .zh ? recent.nameZh : recent.nameEn)
+                                    Text(language.isChinese ? L10n.display(recent.nameZh) : recent.nameEn)
                                         .font(.subheadline)
                                     if let count = routeCount(recent.id) {
                                         Text("\(count) \(L10n.t("unit.routes"))")
@@ -231,7 +231,7 @@ struct StopRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(L10n.language == .zh ? item.nameZh : item.nameEn)
+            Text(L10n.language.isChinese ? L10n.display(item.nameZh) : item.nameEn)
                 .font(.subheadline)
             if let distance {
                 Text(distance)

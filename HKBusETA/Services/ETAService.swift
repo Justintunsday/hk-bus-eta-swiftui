@@ -103,7 +103,7 @@ enum ETAService {
     }
 
     private static func scheduleRemark(_ language: AppLanguage) -> Terminal {
-        language == .zh
+        language.isChinese
             ? Terminal(en: "", zh: "預定班次")
             : Terminal(en: "Scheduled", zh: "")
     }
@@ -174,7 +174,7 @@ enum ETAService {
     // MARK: - NLB
 
     private static func fetchNLB(stopId: String, nlbId: String, language: AppLanguage) async throws -> [Eta] {
-        let languageCode = language == .zh ? "zh" : "en"
+        let languageCode = language.isChinese ? "zh" : "en"
         let url = URL(string: "https://rt.data.gov.hk/v2/transport/nlb/stop.php?action=estimatedArrivals&routeId=\(nlbId)&stopId=\(stopId)&language=\(languageCode)")!
         let response: NLBEtaResponse = try await getJSON(url)
 
@@ -187,7 +187,7 @@ enum ETAService {
                 return Eta(
                     eta: time + ".000+08:00",
                     remark: isScheduled ? scheduleRemark(language) : Terminal(en: "", zh: ""),
-                    dest: language == .zh ? Terminal(en: "", zh: variant) : Terminal(en: variant, zh: ""),
+                    dest: language.isChinese ? Terminal(en: "", zh: variant) : Terminal(en: variant, zh: ""),
                     co: "nlb"
                 )
             }
@@ -196,7 +196,7 @@ enum ETAService {
             return [
                 Eta(
                     eta: "",
-                    remark: language == .zh ? Terminal(en: "", zh: message) : Terminal(en: message, zh: ""),
+                    remark: language.isChinese ? Terminal(en: "", zh: message) : Terminal(en: message, zh: ""),
                     dest: Terminal(en: "", zh: ""),
                     co: "nlb"
                 )
@@ -251,7 +251,7 @@ enum ETAService {
 
     private static func fetchLRTFeeder(stopId: String, route: String, language: AppLanguage) async throws -> [Eta] {
         let url = URL(string: "https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule")!
-        let response: MTRBusScheduleResponse = try await postJSON(url, body: ["language": language == .zh ? "zh" : "en", "routeName": route])
+        let response: MTRBusScheduleResponse = try await postJSON(url, body: ["language": language.isChinese ? "zh" : "en", "routeName": route])
 
         let stops = response.busStop ?? []
         if stops.isEmpty {
@@ -259,7 +259,7 @@ enum ETAService {
                 return [
                     Eta(
                         eta: "",
-                        remark: language == .zh ? Terminal(en: "", zh: title) : Terminal(en: title, zh: ""),
+                        remark: language.isChinese ? Terminal(en: "", zh: title) : Terminal(en: title, zh: ""),
                         dest: Terminal(en: "", zh: ""),
                         co: "lrtfeeder"
                     )

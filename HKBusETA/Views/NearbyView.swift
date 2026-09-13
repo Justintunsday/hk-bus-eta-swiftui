@@ -71,7 +71,7 @@ struct NearbyView: View {
                 NavigationLink(value: StopTarget(stopId: entry.item.id)) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(language == .zh ? entry.item.nameZh : entry.item.nameEn)
+                            Text(language.isChinese ? L10n.display(entry.item.nameZh) : entry.item.nameEn)
                                 .font(.subheadline)
                             let count = app.data.routeCount(at: entry.item.id)
                             if count > 0 {

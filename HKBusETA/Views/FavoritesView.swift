@@ -31,7 +31,7 @@ struct FavoritesView: View {
                                 ForEach(app.bookmarks.favoriteStops) { favorite in
                                     NavigationLink(value: StopTarget(stopId: favorite.id)) {
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text(language == .zh ? favorite.nameZh : favorite.nameEn)
+                                            Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
                                                 .font(.subheadline)
                                             let count = app.data.routeCount(at: favorite.id)
                                             if count > 0 {
@@ -62,9 +62,9 @@ struct FavoritesView: View {
         HStack(spacing: 10) {
             RouteBadge(route: favorite.route, entry: app.data.entry(favorite.routeKey))
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(L10n.t("route.to")) \(language == .zh ? favorite.destZh : favorite.destEn)")
+                Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(favorite.destZh) : favorite.destEn)")
                     .font(.subheadline)
-                Text("\(language == .zh ? favorite.stopNameZh : favorite.stopNameEn)")
+                Text("\(language.isChinese ? L10n.display(favorite.stopNameZh) : favorite.stopNameEn)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }

@@ -270,8 +270,11 @@ final class DataStore {
     func searchRoutes(query: String, filter: TransportFilter) -> [RouteSearchItem] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
-        let upper = trimmed.uppercased()
-        let lower = trimmed.lowercased()
+        // The database uses Traditional Chinese only; normalize the input so
+        // Simplified Chinese queries still match.
+        let normalized = ChineseConverter.traditional(trimmed)
+        let upper = normalized.uppercased()
+        let lower = normalized.lowercased()
         let allowed = filter.companies
 
         var scored: [(item: RouteSearchItem, score: Int)] = []
@@ -301,7 +304,7 @@ final class DataStore {
     func searchStops(query: String) -> [StopSearchItem] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
-        let lower = trimmed.lowercased()
+        let lower = ChineseConverter.traditional(trimmed).lowercased()
         var matches = stopSearchItems.filter { $0.haystack.contains(lower) }
         matches.sort {
             let lhs = $0.nameZh.count + $0.nameEn.count
