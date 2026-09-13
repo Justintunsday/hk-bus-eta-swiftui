@@ -64,8 +64,8 @@ struct CheLaileClient: Sendable {
     }
 
     func stopDetail(cityId: String, physicalStId: String, namesakeStId: String?, lat: Double?, lng: Double?) async throws -> CheLaileStopDetailResponse {
-        let latText = lat.map(String.init) ?? ""
-        let lngText = lng.map(String.init) ?? ""
+        let latText = lat.map { String($0) } ?? ""
+        let lngText = lng.map { String($0) } ?? ""
         return try await request("/bus/stop!encryptedPhyStnDetail.action", params: [
             ("cityId", cityId),
             ("localCityId", cityId),
@@ -83,8 +83,8 @@ struct CheLaileClient: Sendable {
     }
 
     func lineDetail(cityId: String, lineId: String, lat: Double?, lng: Double?) async throws -> CheLaileLineDetailResponse {
-        let latText = lat.map(String.init) ?? ""
-        let lngText = lng.map(String.init) ?? ""
+        let latText = lat.map { String($0) } ?? ""
+        let lngText = lng.map { String($0) } ?? ""
         return try await request("/bus/line!encryptedLineDetail.action", params: [
             ("cityId", cityId),
             ("localCityId", cityId),

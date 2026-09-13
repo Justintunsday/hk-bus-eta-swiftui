@@ -256,7 +256,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "HK Bus ETA";
+				INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to find nearby stops. \u4f60\u7684\u4f4d\u7f6e\u6703\u7528\u65bc\u641c\u5c0b\u9644\u8fd1\u8eca\u7ad9\u3002";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -289,7 +289,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "HK Bus ETA";
+				INFOPLIST_KEY_CFBundleDisplayName = "Where My Bus Now";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to find nearby stops. \u4f60\u7684\u4f4d\u7f6e\u6703\u7528\u65bc\u641c\u5c0b\u9644\u8fd1\u8eca\u7ad9\u3002";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

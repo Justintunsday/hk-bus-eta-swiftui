@@ -3,9 +3,9 @@
   "strings" : {
     "CFBundleDisplayName" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "HK Bus ETA" } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "巴士預報" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "巴士预报" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Where My Bus Now" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "我的巴士在哪" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "我的公交在哪" } }
       }
     }
   },
