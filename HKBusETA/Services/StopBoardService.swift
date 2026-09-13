@@ -125,7 +125,7 @@ enum StopBoardService {
 
     private static func score(_ entry: RouteEntry, db: EtaDB, provider: any TransitProvider) -> Int {
         var score = 0
-        if !provider.isServiceAvailable(entry, db: db, at: Date()) { score += 256 }
+        if !provider.isServiceAvailable(entry: entry, db: db, at: Date()) { score += 256 }
         if entry.freq == nil { score += 128 }
         if entry.fares == nil { score += 128 }
         let bounds = Array(entry.bound.values)
