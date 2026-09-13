@@ -21,8 +21,7 @@ struct RouteDetailView: View {
                         Section {
                             RouteMapSection(entry: entry, points: points, selectedSeq: $selectedSeq)
                                 .frame(height: 230)
-                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.m, style: .continuous))
-                                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                                .listRowInsets(EdgeInsets())
                         }
                     }
 
@@ -36,7 +35,12 @@ struct RouteDetailView: View {
                                 isExpanded: selectedSeq == point.seq,
                                 onTap: { toggle(point.seq) }
                             )
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                            .listRowInsets(EdgeInsets(
+                                top: point.seq == 0 ? 12 : 0,
+                                leading: 16,
+                                bottom: point.seq == points.count - 1 ? 12 : 0,
+                                trailing: 16
+                            ))
                             .listRowSeparator(.hidden)
                         }
                     } header: {
