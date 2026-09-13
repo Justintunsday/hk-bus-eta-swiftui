@@ -421,6 +421,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通用" } }
       }
     },
+"chelaile.loadFailed" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load route data" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "無法載入路線資料" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法加载路线数据" } }
+  }
+},
 "chelaile.scheduled" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Scheduled" } },

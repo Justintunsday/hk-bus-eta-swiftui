@@ -177,7 +177,7 @@ struct CheLaileClient: Sendable {
                     CCCrypt(
                         CCOperation(kCCDecrypt),
                         CCAlgorithm(kCCAlgorithmAES),
-                        CCOptions(kCCOptionECBMode),
+                        CCOptions(kCCOptionECBMode | kCCOptionPKCS7Padding),
                         keyBytes.baseAddress,
                         keyCount,
                         nil,
