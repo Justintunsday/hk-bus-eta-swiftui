@@ -21,25 +21,42 @@ jobs:
 
       - name: Build for iOS Simulator
         run: |
-          xcodebuild \
-            -project HKBusETA.xcodeproj \
-            -scheme HKBusETA \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
+          for attempt in 1 2 3; do
+            echo "Simulator build attempt $attempt"
+            if xcodebuild \
+              -project HKBusETA.xcodeproj \
+              -scheme HKBusETA \
+              -configuration Debug \
+              -sdk iphonesimulator \
+              -destination 'generic/platform=iOS Simulator' \
+              CODE_SIGNING_ALLOWED=NO \
+              build; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed (possible Xcode build-system crash), retrying..."
+            sleep 10
+          done
+          exit 1
 
       - name: Archive for iOS device (unsigned)
         run: |
-          xcodebuild \
-            -project HKBusETA.xcodeproj \
-            -scheme HKBusETA \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/HKBusETA.xcarchive" \
-            CODE_SIGNING_ALLOWED=NO \
-            archive
+          for attempt in 1 2 3; do
+            echo "Archive attempt $attempt"
+            if xcodebuild \
+              -project HKBusETA.xcodeproj \
+              -scheme HKBusETA \
+              -configuration Release \
+              -destination 'generic/platform=iOS' \
+              -archivePath "$RUNNER_TEMP/HKBusETA.xcarchive" \
+              CODE_SIGNING_ALLOWED=NO \
+              archive; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed (possible Xcode build-system crash), retrying..."
+            rm -rf "$RUNNER_TEMP/HKBusETA.xcarchive"
+            sleep 10
+          done
+          exit 1
 
       - name: Package unsigned IPA
         run: |
