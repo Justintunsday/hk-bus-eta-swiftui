@@ -165,7 +165,10 @@ struct CheLaileClient: Sendable {
     private static func decrypt(_ base64: String) throws -> Data {
         guard let cipher = Data(base64Encoded: base64) else { throw CheLaileError.decryptFailed }
         let key = Data(aesKey.utf8)
-        var output = Data(count: cipher.count + kCCBlockSizeAES128)
+        let keyCount = key.count
+        let cipherCount = cipher.count
+        let outputCapacity = cipherCount + kCCBlockSizeAES128
+        var output = Data(count: outputCapacity)
         var outputLength = 0
 
         let status = output.withUnsafeMutableBytes { outputBytes in
@@ -176,12 +179,12 @@ struct CheLaileClient: Sendable {
                         CCAlgorithm(kCCAlgorithmAES),
                         CCOptions(kCCOptionECBMode),
                         keyBytes.baseAddress,
-                        key.count,
+                        keyCount,
                         nil,
                         cipherBytes.baseAddress,
-                        cipher.count,
+                        cipherCount,
                         outputBytes.baseAddress,
-                        output.count,
+                        outputCapacity,
                         &outputLength
                     )
                 }
