@@ -93,8 +93,8 @@ struct MainlandLineLoaderView: View {
                 errorMessage = MainlandErrorPresentation.message(for: MainlandProviderError.noData)
                 return
             }
-            let payload = payload.applying(modeHint: modeHint)
-            guard let shared = MainlandRouteAdapter.makeSharedRoute(from: payload) else {
+            let normalizedPayload = payload.applying(modeHint: modeHint)
+            guard let shared = MainlandRouteAdapter.makeSharedRoute(from: normalizedPayload) else {
                 errorMessage = MainlandErrorPresentation.message(for: MainlandProviderError.noData)
                 return
             }
