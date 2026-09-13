@@ -1,5 +1,7 @@
 # HK Bus ETA (SwiftUI)
 
+![Build](https://github.com/Justintunsday/hk-bus-eta-swiftui/actions/workflows/build.yml/badge.svg)
+
 香港獨立巴士預報 SwiftUI 版 — an unofficial, ad-free Hong Kong bus ETA app rebuilt from scratch with SwiftUI.
 
 本項目是 [hkbus/hk-independent-bus-eta](https://github.com/hkbus/hk-independent-bus-eta) 的 SwiftUI 重寫版，資料與服務邏輯取自該開源項目，並非官方應用。
@@ -31,7 +33,7 @@
 需求：macOS + Xcode 16 或以上。
 
 ```bash
-git clone https://github.com/<your-name>/hk-bus-eta-swiftui.git
+git clone https://github.com/Justintunsday/hk-bus-eta-swiftui.git
 cd hk-bus-eta-swiftui
 open HKBusETA.xcodeproj
 ```
