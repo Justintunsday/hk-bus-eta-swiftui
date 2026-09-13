@@ -331,7 +331,7 @@ enum HongKongETAService {
                 let waitMinutes = parseLRTWaitTime(item.time_en ?? "")
                 let etaDate = Date().addingTimeInterval(TimeInterval(waitMinutes * 60))
 
-                let cars = String(repeating: "�?, count: max(item.train_length ?? 0, 0))
+                let cars = String(repeating: "●", count: max(item.train_length ?? 0, 0))
                 let platformZh = "\(platform.platform_id)號月台\(cars.isEmpty ? "" : " - " + cars)"
                 let platformEn = "Platform \(platform.platform_id)\(cars.isEmpty ? "" : " - " + cars)"
                 let remarkZh = (item.routeRemarkChi2?.isEmpty == false) ? "\(platformZh) - \(item.routeRemarkChi2!)" : platformZh
@@ -387,7 +387,7 @@ enum HongKongETAService {
             let platform = train.plat ?? ""
             return Eta(
                 eta: time.replacingOccurrences(of: " ", with: "T") + "+08:00",
-                remark: platform.isEmpty ? Terminal(en: "", zh: "") : Terminal(en: "Platform \(platform)", zh: "\(platform)號月�?),
+                remark: platform.isEmpty ? Terminal(en: "", zh: "") : Terminal(en: "Platform \(platform)", zh: "\(platform)號月台"),
                 dest: dest,
                 co: "mtr"
             )
