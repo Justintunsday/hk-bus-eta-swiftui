@@ -31,7 +31,7 @@ struct RouteEtaView: View {
                             HStack {
                                 Text(L10n.t("eta.updatedAt"))
                                 Spacer()
-                                Text(HKTime.timeString(lastUpdated))
+                                Text(RegionClock.timeString(lastUpdated))
                                     .monospacedDigit()
                             }
                             .font(.caption)
@@ -100,7 +100,7 @@ struct RouteEtaView: View {
                         .fontWeight(.medium)
                 }
                 Spacer()
-                if let fare = FareUtils.fare(entry, at: seq, db: app.data.db ?? .empty) {
+                if let fare = app.provider.fare(entry: entry, at: seq, db: app.data.db ?? .empty, at: Date()) {
                     Text("$\(fare)")
                         .font(.subheadline)
                         .monospacedDigit()
@@ -168,7 +168,7 @@ struct RouteEtaView: View {
     /// Signature detail: oversized rounded countdown numeral.
     private func heroRow(_ hero: Eta) -> some View {
         let minutes = hero.minutesUntil ?? 0
-        let threshold = (hero.co == "mtr" || hero.co == "lightRail") ? 2 : 1
+        let threshold = app.provider.arrivingThreshold(operatorID: hero.co)
         let isArriving = minutes < threshold
 
         return VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -193,7 +193,7 @@ struct RouteEtaView: View {
                     Text(L10n.t("eta.arrivalTime"))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    Text(HKTime.timeString(hero.eta))
+                    Text(RegionClock.timeString(hero.eta))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .monospacedDigit()
@@ -226,12 +226,12 @@ struct RouteEtaView: View {
     @ViewBuilder
     private func scheduleFallback(_ entry: RouteEntry) -> some View {
         let db = app.data.db ?? .empty
-        if let headway = ServiceHours.currentHeadway(entry, db: db) {
+        if let headway = app.provider.currentHeadway(entry: entry, db: db, at: Date()) {
             Section {
                 Label("\(L10n.t("route.every")) \(max(headway / 60, 1)) \(L10n.t("unit.minutes"))", systemImage: "timer")
                     .foregroundStyle(.secondary)
             }
-        } else if let hours = ServiceHours.hoursToday(entry, db: db) {
+        } else if let hours = app.provider.serviceHoursToday(entry: entry, db: db, at: Date()) {
             Section {
                 Label(hours, systemImage: "clock")
                     .foregroundStyle(.secondary)
@@ -268,7 +268,7 @@ struct RouteEtaView: View {
     private func refresh() async {
         guard let entry = app.data.entry(routeKey), let db = app.data.db else { return }
         if etas.isEmpty { isLoading = true }
-        let result = await ETAService.fetchEtas(entry: entry, seq: seq, db: db, language: language)
+        let result = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)
         etas = result
         lastUpdated = Date()
         isLoading = false

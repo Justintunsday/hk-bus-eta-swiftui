@@ -1,6 +1,7 @@
 import Foundation
 
-enum ETAService {
+/// Hong Kong ETA clients for the data.gov.hk / operator APIs.
+enum HongKongETAService {
     private static let session: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
@@ -13,16 +14,15 @@ enum ETAService {
         let availableStops = entry.stops
 
         let tasks: [Task<[Eta], Never>] = entry.co.compactMap { coRaw in
-            guard let co = Company(rawValue: coRaw),
-                  let stopIDs = availableStops[coRaw],
+            guard let stopIDs = availableStops[coRaw],
                   seq >= 0, seq < stopIDs.count
             else { return nil }
             let stopId = stopIDs[seq]
 
             return Task {
                 do {
-                    switch co {
-                    case .kmb:
+                    switch coRaw {
+                    case "kmb":
                         return try await fetchKMB(
                             stopId: stopId,
                             route: entry.route,
@@ -32,17 +32,17 @@ enum ETAService {
                             companyCount: entry.co.count,
                             stops: stopIDs
                         )
-                    case .ctb:
+                    case "ctb":
                         return try await fetchCTB(
                             stopId: stopId,
                             route: entry.route,
                             bound: entry.bound["ctb"] ?? entry.boundValue,
                             seq: seq
                         )
-                    case .nlb:
+                    case "nlb":
                         guard let nlbId = entry.nlbId?.value, !nlbId.isEmpty else { return [] }
                         return try await fetchNLB(stopId: stopId, nlbId: nlbId, language: language)
-                    case .gmb:
+                    case "gmb":
                         guard let gtfsId = entry.gtfsId?.value, !gtfsId.isEmpty else { return [] }
                         return try await fetchGMB(
                             stopId: stopId,
@@ -50,19 +50,22 @@ enum ETAService {
                             bound: entry.bound["gmb"] ?? entry.boundValue,
                             seq: seq
                         )
-                    case .lrtfeeder:
+                    case "lrtfeeder":
                         return try await fetchLRTFeeder(stopId: stopId, route: entry.route, language: language)
-                    case .lightRail:
+                    case "lightRail":
                         return try await fetchLightRail(stopId: stopId, route: entry.route, dest: entry.dest)
-                    case .mtr:
+                    case "mtr":
                         return try await fetchMTR(
                             stopId: stopId,
                             route: entry.route,
                             bound: entry.bound["mtr"] ?? entry.boundValue,
                             stopList: db.stopList
                         )
-                    case .sunferry, .fortuneferry, .hkkf:
-                        return ferryEtas(entry: entry, db: db, language: language)
+                    default:
+                        if HongKongProvider().operators.op(coRaw)?.isFerry == true {
+                            return ferryEtas(entry: entry, db: db, language: language)
+                        }
+                        return []
                     }
                 } catch {
                     return []
@@ -288,7 +291,7 @@ enum ETAService {
 
                 etas.append(
                     Eta(
-                        eta: HKTime.isoString(from: etaDate),
+                        eta: RegionClock.isoString(from: etaDate),
                         remark: remark,
                         dest: Terminal(en: "", zh: ""),
                         co: "lrtfeeder"
@@ -328,7 +331,7 @@ enum ETAService {
                 let waitMinutes = parseLRTWaitTime(item.time_en ?? "")
                 let etaDate = Date().addingTimeInterval(TimeInterval(waitMinutes * 60))
 
-                let cars = String(repeating: "●", count: max(item.train_length ?? 0, 0))
+                let cars = String(repeating: "�?, count: max(item.train_length ?? 0, 0))
                 let platformZh = "\(platform.platform_id)號月台\(cars.isEmpty ? "" : " - " + cars)"
                 let platformEn = "Platform \(platform.platform_id)\(cars.isEmpty ? "" : " - " + cars)"
                 let remarkZh = (item.routeRemarkChi2?.isEmpty == false) ? "\(platformZh) - \(item.routeRemarkChi2!)" : platformZh
@@ -336,7 +339,7 @@ enum ETAService {
 
                 etas.append(
                     Eta(
-                        eta: HKTime.isoString(from: etaDate),
+                        eta: RegionClock.isoString(from: etaDate),
                         remark: Terminal(en: remarkEn, zh: remarkZh),
                         dest: Terminal(en: "", zh: ""),
                         co: "lightRail"
@@ -384,7 +387,7 @@ enum ETAService {
             let platform = train.plat ?? ""
             return Eta(
                 eta: time.replacingOccurrences(of: " ", with: "T") + "+08:00",
-                remark: platform.isEmpty ? Terminal(en: "", zh: "") : Terminal(en: "Platform \(platform)", zh: "\(platform)號月台"),
+                remark: platform.isEmpty ? Terminal(en: "", zh: "") : Terminal(en: "Platform \(platform)", zh: "\(platform)號月�?),
                 dest: dest,
                 co: "mtr"
             )

@@ -72,6 +72,17 @@ enum DesignTokens {
 // MARK: - Color helpers
 
 extension Color {
+    /// Hex value initializer, e.g. `Color(hex: 0xE85D3A)`.
+    init(hex: UInt32) {
+        self.init(
+            .sRGB,
+            red: Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255,
+            opacity: 1
+        )
+    }
+
     /// Hex string initializer, e.g. `Color(hex: "E85D3A")`.
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

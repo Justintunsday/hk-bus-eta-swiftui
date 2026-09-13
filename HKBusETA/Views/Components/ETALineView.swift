@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ETALineView: View {
+    @Environment(AppState.self) private var app
     let eta: Eta
     let language: AppLanguage
     let format: EtaFormat
@@ -11,8 +12,8 @@ struct ETALineView: View {
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.s) {
-            if showCompany, let company = eta.company {
-                Text(company.name(language))
+            if showCompany, let op = app.provider.operators.op(eta.co) {
+                Text(op.name(language))
                     .font(DesignTokens.footnote)
                     .foregroundStyle(.tertiary)
             }
@@ -49,7 +50,7 @@ struct ETALineView: View {
         if eta.date != nil, let minutes = eta.minutesUntil {
             switch format {
             case .exact:
-                Text(HKTime.timeString(eta.eta))
+                Text(RegionClock.timeString(eta.eta))
                     .font(DesignTokens.tabular(17, weight: highlight ? .bold : .medium))
                     .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
             case .diff:
@@ -60,7 +61,7 @@ struct ETALineView: View {
                 }
             case .mixed:
                 HStack(spacing: DesignTokens.Spacing.s) {
-                    Text(HKTime.timeString(eta.eta))
+                    Text(RegionClock.timeString(eta.eta))
                         .font(DesignTokens.tabular(14, weight: .regular))
                         .foregroundStyle(.tertiary)
                     if isArriving(minutes) {
@@ -100,19 +101,20 @@ struct ETALineView: View {
     }
 
     private var threshold: Int {
-        (eta.co == "mtr" || eta.co == "lightRail") ? 2 : 1
+        app.provider.arrivingThreshold(operatorID: eta.co)
     }
 }
 
 /// Single-line compact ETA used by the stop departure board.
 struct ETACompactLineView: View {
+    @Environment(AppState.self) private var app
     let eta: Eta
     let format: EtaFormat
     let annotateScheduled: Bool
     var highlight: Bool = false
 
     private var language: AppLanguage { L10n.language }
-    private var threshold: Int { (eta.co == "mtr" || eta.co == "lightRail") ? 2 : 1 }
+    private var threshold: Int { app.provider.arrivingThreshold(operatorID: eta.co) }
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.xs) {
@@ -123,7 +125,7 @@ struct ETACompactLineView: View {
             }
             if eta.date != nil, let minutes = eta.minutesUntil {
                 if format != .diff {
-                    Text(HKTime.timeString(eta.eta))
+                    Text(RegionClock.timeString(eta.eta))
                         .font(DesignTokens.tabular(13, weight: .regular))
                         .foregroundStyle(.tertiary)
                 }

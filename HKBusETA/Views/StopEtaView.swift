@@ -38,7 +38,7 @@ struct StopEtaView: View {
                         HStack {
                             Text(L10n.t("eta.updatedAt"))
                             Spacer()
-                            Text(HKTime.timeString(lastUpdated))
+                            Text(RegionClock.timeString(lastUpdated))
                                 .monospacedDigit()
                         }
                         .font(.caption)
@@ -96,7 +96,7 @@ struct StopEtaView: View {
         guard let db = app.data.db else { return }
         if items.isEmpty { isLoading = true }
         let refs = app.data.routesAtStop(stopId)
-        let result = await ETAService.fetchStopBoard(refs: refs, db: db, language: language)
+        let result = await StopBoardService.fetchStopBoard(refs: refs, db: db, provider: app.provider, language: language)
         items = result
         lastUpdated = Date()
         isLoading = false

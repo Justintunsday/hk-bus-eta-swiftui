@@ -13,22 +13,44 @@ extension EtaDB {
 }
 
 struct Terminal: Codable, Hashable, Sendable {
-    let en: String
-    let zh: String
+    private let values: [String: String]
 
     init(en: String, zh: String) {
-        self.en = en
-        self.zh = zh
+        values = ["en": en, "zh": zh]
     }
 
+    init(values: [String: String]) {
+        self.values = values
+    }
+
+    var en: String { values["en"] ?? "" }
+    var zh: String { values["zh"] ?? "" }
+
+    /// Arbitrary locale lookup for future regions.
+    func value(_ localeCode: String) -> String? { values[localeCode] }
+
     init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        en = (try? container.decodeIfPresent(String.self, forKey: .en)) ?? ""
-        zh = (try? container.decodeIfPresent(String.self, forKey: .zh)) ?? ""
+        let container = try decoder.singleValueContainer()
+        values = (try? container.decode([String: String].self)) ?? [:]
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(values)
     }
 
     func name(_ language: AppLanguage) -> String {
-        language.isChinese ? L10n.display(zh) : en
+        switch language.resolved {
+        case .zhHans:
+            if let simplified = values["zh-Hans"] { return simplified }
+            return ChineseConverter.simplified(zh)
+        case .zh:
+            if let traditional = values["zh-Hant"] { return traditional }
+            return zh
+        default:
+            if let direct = values["en"] { return direct }
+            return values.values.first ?? ""
+        }
     }
 }
 
@@ -67,12 +89,12 @@ struct RouteEntry: Codable, Sendable {
         return value
     }
 
-    var companies: [Company] {
-        co.compactMap { Company(rawValue: $0) }
+    var companies: [String] {
+        co
     }
 
-    func stopIDs(_ company: Company) -> [String] {
-        stops[company.rawValue] ?? []
+    func stopIDs(_ operatorID: String) -> [String] {
+        stops[operatorID] ?? []
     }
 
     /// The longest stop list among serving companies; used as canonical stop sequence.

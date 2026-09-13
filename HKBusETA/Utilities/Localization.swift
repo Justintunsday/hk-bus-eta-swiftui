@@ -37,6 +37,15 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         return language == .zh || language == .zhHans
     }
 
+    /// BCP-47-ish code used for data name lookups.
+    var localeCode: String {
+        switch resolved {
+        case .zhHans: return "zh-Hans"
+        case .zh: return "zh-Hant"
+        default: return "en"
+        }
+    }
+
     var locale: Locale {
         switch resolved {
         case .zhHans: return Locale(identifier: "zh_Hans_CN")
@@ -96,28 +105,37 @@ enum L10n {
     }
 }
 
-enum HKTime {
-    static let timeZone = TimeZone(identifier: "Asia/Hong_Kong")!
+/// Region-aware clock. The active `TransitProvider` injects its time zone at
+/// app start, so all date math follows the region being served.
+enum RegionClock {
+    nonisolated(unsafe) static var timeZone: TimeZone = TimeZone(identifier: "Asia/Hong_Kong")!
 
-    static var calendar: Calendar = {
+    static var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         return calendar
-    }()
+    }
 
-    private static let isoFormatters: [DateFormatter] = {
-        ["yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd'T'HH:mmZ", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"].map { format in
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.timeZone = timeZone
-            formatter.dateFormat = format
-            return formatter
+    private static var cachedFormatters: [DateFormatter] = []
+    private static var cachedTimeZone: TimeZone?
+
+    private static func formatters() -> [DateFormatter] {
+        if cachedTimeZone != timeZone || cachedFormatters.isEmpty {
+            cachedFormatters = ["yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd'T'HH:mmZ", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"].map { format in
+                let formatter = DateFormatter()
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.timeZone = timeZone
+                formatter.dateFormat = format
+                return formatter
+            }
+            cachedTimeZone = timeZone
         }
-    }()
+        return cachedFormatters
+    }
 
     static func date(fromISO string: String) -> Date? {
         guard !string.isEmpty else { return nil }
-        for formatter in isoFormatters {
+        for formatter in formatters() {
             if let date = formatter.date(from: string) { return date }
         }
         return nil
@@ -152,12 +170,6 @@ enum HKTime {
         formatter.timeZone = timeZone
         formatter.dateFormat = "yyyyMMdd"
         return formatter.string(from: date)
-    }
-
-    static func isHoliday(_ holidays: [String], date: Date = Date()) -> Bool {
-        let components = calendar.dateComponents([.weekday], from: date)
-        if components.weekday == 1 { return true }
-        return holidays.contains(dayString(date))
     }
 
     /// Weekday index following the data convention: 0 = Sunday ... 6 = Saturday.

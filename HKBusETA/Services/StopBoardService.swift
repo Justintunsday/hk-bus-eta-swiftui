@@ -37,9 +37,15 @@ private actor AsyncSemaphore {
     }
 }
 
-extension ETAService {
+enum StopBoardService {
     /// Fetches a full departure board for one physical stop.
-    static func fetchStopBoard(refs: [StopRouteRef], db: EtaDB, language: AppLanguage, maxRoutes: Int = 40) async -> [StopBoardItem] {
+    static func fetchStopBoard(
+        refs: [StopRouteRef],
+        db: EtaDB,
+        provider: any TransitProvider,
+        language: AppLanguage,
+        maxRoutes: Int = 40
+    ) async -> [StopBoardItem] {
         let limited = Array(refs.prefix(maxRoutes))
 
         let semaphore = AsyncSemaphore(6)
@@ -50,11 +56,11 @@ extension ETAService {
                 guard let entry = db.routeList[ref.routeKey] else { continue }
                 group.addTask {
                     await semaphore.wait()
-                    var etas = await fetchEtas(entry: entry, seq: ref.seq, db: db, language: language)
+                    var etas = await provider.fetchEtas(entry: entry, seq: ref.seq, db: db, language: language)
                     await semaphore.signal()
 
                     if entry.co.first == "mtr" {
-                        let validNames = Set(entry.stopIDs(.mtr).compactMap { db.stopList[$0]?.name.zh })
+                        let validNames = Set(entry.stopIDs("mtr").compactMap { db.stopList[$0]?.name.zh })
                         if !validNames.isEmpty {
                             etas = etas.filter { validNames.contains($0.dest.zh) }
                         }
@@ -69,10 +75,10 @@ extension ETAService {
             }
         }
 
-        return dedupeAndSort(fetched, db: db)
+        return dedupeAndSort(fetched, db: db, provider: provider)
     }
 
-    private static func dedupeAndSort(_ items: [StopBoardItem], db: EtaDB) -> [StopBoardItem] {
+    private static func dedupeAndSort(_ items: [StopBoardItem], db: EtaDB, provider: any TransitProvider) -> [StopBoardItem] {
         var kept: [StopBoardItem] = []
         var signatures: [String] = []
 
@@ -89,7 +95,7 @@ extension ETAService {
                     && !Set(kept[index].entry.co).isDisjoint(with: Set(item.entry.co))
             }
             if let duplicateIndex {
-                if score(item.entry, db: db) < score(kept[duplicateIndex].entry, db: db) {
+                if score(item.entry, db: db, provider: provider) < score(kept[duplicateIndex].entry, db: db, provider: provider) {
                     kept[duplicateIndex] = item
                 }
             } else {
@@ -117,9 +123,9 @@ extension ETAService {
         }
     }
 
-    private static func score(_ entry: RouteEntry, db: EtaDB) -> Int {
+    private static func score(_ entry: RouteEntry, db: EtaDB, provider: any TransitProvider) -> Int {
         var score = 0
-        if !ServiceHours.isAvailable(entry, db: db) { score += 256 }
+        if !provider.isServiceAvailable(entry, db: db, at: Date()) { score += 256 }
         if entry.freq == nil { score += 128 }
         if entry.fares == nil { score += 128 }
         let bounds = Array(entry.bound.values)

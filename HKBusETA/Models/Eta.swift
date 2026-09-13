@@ -8,7 +8,7 @@ struct Eta: Identifiable, Sendable {
 
     var id: String { "\(co)|\(eta)|\(dest.en)|\(remark.en)" }
 
-    var date: Date? { HKTime.date(fromISO: eta) }
+    var date: Date? { RegionClock.date(fromISO: eta) }
 
     var isScheduled: Bool {
         remark.zh.hasSuffix("班次") || remark.en.hasSuffix("Scheduled Bus") || remark.en == "Scheduled"
@@ -18,8 +18,6 @@ struct Eta: Identifiable, Sendable {
         guard let date else { return nil }
         return Int(round(date.timeIntervalSinceNow / 60))
     }
-
-    var company: Company? { Company(rawValue: co) }
 }
 
 /// Raw ETA payloads from data.gov.hk

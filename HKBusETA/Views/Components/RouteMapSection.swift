@@ -22,13 +22,14 @@ struct RouteStopPoint: Identifiable {
 }
 
 struct RouteMapSection: View {
+    @Environment(AppState.self) private var app
     let entry: RouteEntry
     let points: [RouteStopPoint]
     @Binding var selectedSeq: Int?
 
     @State private var camera: MapCameraPosition = .automatic
 
-    private var lineColor: Color { RouteStyle.info(for: entry).background }
+    private var lineColor: Color { RouteStyle.info(for: entry, provider: app.provider).background }
     private var coordinates: [CLLocationCoordinate2D] { points.compactMap(\.coordinate) }
 
     var body: some View {
@@ -77,7 +78,7 @@ struct RouteMapSection: View {
                 Circle().stroke(.white, lineWidth: 1.5)
                 Text("\(point.seq + 1)")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(isSelected ? DesignTokens.onAccent : RouteStyle.info(for: entry).foreground)
+                    .foregroundStyle(isSelected ? DesignTokens.onAccent : RouteStyle.info(for: entry, provider: app.provider).foreground)
             }
             .frame(width: isSelected ? 24 : 19, height: isSelected ? 24 : 19)
 

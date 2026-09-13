@@ -9,7 +9,7 @@ struct StopTimelineRow: View {
     let isExpanded: Bool
     let onTap: () -> Void
 
-    private var lineColor: Color { RouteStyle.info(for: entry).background }
+    private var lineColor: Color { RouteStyle.info(for: entry, provider: app.provider).background }
 
     var body: some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.s) {
@@ -75,7 +75,7 @@ struct StopEtaInlineView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
-            if let fare = FareUtils.fare(entry, at: seq, db: app.data.db ?? .empty) {
+            if let fare = app.provider.fare(entry: entry, at: seq, db: app.data.db ?? .empty, at: Date()) {
                 HStack(spacing: DesignTokens.Spacing.xs) {
                     Text(L10n.t("route.fare"))
                         .foregroundStyle(.secondary)
@@ -151,7 +151,7 @@ struct StopEtaInlineView: View {
     private func refresh() async {
         guard let db = app.data.db else { return }
         if etas.isEmpty { isLoading = true }
-        let result = await ETAService.fetchEtas(entry: entry, seq: seq, db: db, language: language)
+        let result = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)
         etas = result
         isLoading = false
     }

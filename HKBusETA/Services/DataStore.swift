@@ -48,14 +48,12 @@ final class DataStore {
     private(set) var stopRouteIndex: [String: [StopRouteRef]] = [:]
     private(set) var directStopCompanies: [String: Set<String>] = [:]
 
-    static let primaryURL = URL(string: "https://data.hkbus.app/routeFareList.min.json")!
-    static let fallbackURL = URL(string: "https://hkbus.github.io/hk-bus-crawling/routeFareList.min.json")!
-    static let md5PrimaryURL = URL(string: "https://data.hkbus.app/routeFareList.md5")!
-    static let md5FallbackURL = URL(string: "https://hkbus.github.io/hk-bus-crawling/routeFareList.md5")!
+    let provider: any TransitProvider
 
     private let session: URLSession
 
-    init() {
+    init(provider: any TransitProvider) {
+        self.provider = provider
         let configuration = URLSessionConfiguration.default
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.timeoutIntervalForRequest = 60
@@ -66,7 +64,7 @@ final class DataStore {
 
     private var cacheDirectory: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return base.appendingPathComponent("HKBusETA", isDirectory: true)
+        return base.appendingPathComponent("HKBusETA", isDirectory: true).appendingPathComponent(provider.id, isDirectory: true)
     }
 
     private var cacheFileURL: URL { cacheDirectory.appendingPathComponent("routeFareList.min.json") }
@@ -134,7 +132,7 @@ final class DataStore {
     }
 
     private func fetchData() async -> Data? {
-        for url in [Self.primaryURL, Self.fallbackURL] {
+        for url in provider.databaseURLs {
             if let data = try? await session.data(from: url).0, !data.isEmpty {
                 return data
             }
@@ -143,7 +141,7 @@ final class DataStore {
     }
 
     private func fetchText(md5: Bool) async -> String? {
-        let urls = md5 ? [Self.md5PrimaryURL, Self.md5FallbackURL] : [Self.primaryURL, Self.fallbackURL]
+        let urls = md5 ? provider.databaseMd5URLs : provider.databaseURLs
         for url in urls {
             if let (data, _) = try? await session.data(from: url),
                let text = String(data: data, encoding: .utf8) {
@@ -275,7 +273,7 @@ final class DataStore {
         let normalized = ChineseConverter.traditional(trimmed)
         let upper = normalized.uppercased()
         let lower = normalized.lowercased()
-        let allowed = filter.companies
+        let allowed = provider.operatorIDs(for: filter)
 
         var scored: [(item: RouteSearchItem, score: Int)] = []
         for item in routeSearchItems {

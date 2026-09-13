@@ -113,16 +113,16 @@ struct RouteDetailView: View {
             .font(.subheadline)
 
             HStack(spacing: 14) {
-                if let hours = ServiceHours.hoursToday(entry, db: app.data.db ?? EtaDB.empty) {
+                if let hours = app.provider.serviceHoursToday(entry: entry, db: app.data.db ?? EtaDB.empty, at: Date()) {
                     labeled("clock", hours)
                 }
-                if let headway = ServiceHours.currentHeadway(entry, db: app.data.db ?? EtaDB.empty) {
+                if let headway = app.provider.currentHeadway(entry: entry, db: app.data.db ?? EtaDB.empty, at: Date()) {
                     labeled("timer", headwayText(headway))
                 }
                 if let journey = entry.journeyTimeMinutes {
                     labeled("hourglass", "\(journey) \(L10n.t("unit.minutes"))")
                 }
-                if let fare = FareUtils.fare(entry, at: 0, db: app.data.db ?? EtaDB.empty) {
+                if let fare = app.provider.fare(entry: entry, at: 0, db: app.data.db ?? EtaDB.empty, at: Date()) {
                     labeled("dollarsign.circle", "$\(fare)")
                 }
             }

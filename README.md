@@ -21,11 +21,14 @@
 ## 技術架構 Architecture
 
 - SwiftUI + `@Observable`（iOS 17+）
+- **多地區架構**：`TransitProvider` 協議把所有地區相關邏輯（數據源 URL、時區、營運商註冊表、服務日曆、車費、線路配色、ETA 抓取）收進 provider；香港實現為 `HongKongProvider`，UI 層不依賴任何香港假設，新增地區只需實現協議
+- 營運商由 `TransitOperator` + `OperatorRegistry` 動態註冊（不再是硬編碼 enum）；站名為多語言字典（`zh-Hant`/`zh-Hans`/`en` 及未來語言）
+- 時區/日曆由 `RegionClock` 按當前地區注入
 - **Liquid Glass**：以 Xcode 26 / iOS 26 SDK 編譯時，標準控件在 iOS 26+ 自動採用 Liquid Glass 設計；篩選標籤等自訂元件另有 `glassEffect` 實作（以編譯器版本門控，Xcode 16 亦可編譯）
 - Xcode 16 同步資料夾（`PBXFileSystemSynchronizedRootGroup`），新增檔案無需修改 `project.pbxproj`
 - 無第三方依賴
-- `HKBusETA/Models` — `EtaDB` Codable 資料模型
-- `HKBusETA/Services` — 資料下載與快取、各營運商 ETA API、收藏持久化、定位
+- `HKBusETA/Models` — `EtaDB` Codable 資料模型、`TransitOperator`
+- `HKBusETA/Services` — `TransitProvider`/`HongKongProvider`、資料下載與快取、各營運商 ETA API、收藏持久化、定位
 - `HKBusETA/Views` — 搜尋、路線、到站、附近、收藏、設定
 - `HKBusETA/Resources/Localizable.xcstrings` — 雙語字串表
 
