@@ -13,6 +13,12 @@ final class AppState {
     let bookmarks: BookmarkStore
     let location: LocationService
 
+    /// Optional mainland query capability exposed to views without coupling
+    /// them to a concrete vendor implementation.
+    var mainlandProvider: (any MainlandTransitProvider)? {
+        provider as? any MainlandTransitProvider
+    }
+
     init() {
         let settings = AppSettings()
         let region = RegionCatalog.region(for: settings.selectedRegionID) ?? RegionCatalog.hongKong

@@ -1,8 +1,10 @@
 import Foundation
 
-/// Network smoke test for the production CheLaile client.
+/// Optional network smoke test for the legacy CheLaile compatibility client.
 /// Run on macOS CI: it exercises search (plain), line detail (encrypted)
-/// and stop detail (encrypted) against the live API.
+/// and stop detail (encrypted) against the live API. It is intentionally
+/// allowed to fail because this reverse-engineered source is not a release
+/// prerequisite and may be unavailable or change without notice.
 @main
 struct CheLaileSmoke {
     static func main() async {

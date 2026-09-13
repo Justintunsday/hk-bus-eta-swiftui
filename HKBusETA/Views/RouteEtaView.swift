@@ -8,6 +8,7 @@ struct RouteEtaView: View {
     @State private var etas: [Eta] = []
     @State private var isLoading = false
     @State private var lastUpdated: Date?
+    @State private var etaError: String?
 
     private var language: AppLanguage { L10n.language }
     private var refreshInterval: UInt64 { 30_000_000_000 }
@@ -157,6 +158,14 @@ struct RouteEtaView: View {
                     .padding(.vertical, 2)
                 }
             }
+        } else if let etaError {
+            Section {
+                Label(L10n.t("error.mainland.realtimeUnavailable"), systemImage: "wifi.exclamationmark")
+                    .foregroundStyle(.secondary)
+                Text(etaError)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         } else {
             Section {
                 Text(L10n.t("eta.noEta"))
@@ -268,9 +277,35 @@ struct RouteEtaView: View {
     private func refresh() async {
         guard let entry = app.data.entry(routeKey), let db = app.data.db else { return }
         if etas.isEmpty { isLoading = true }
-        let result = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)
-        etas = result
-        lastUpdated = Date()
+        do {
+            let result: [Eta]
+            if let mainland = app.mainlandProvider {
+                guard let stopIDs = entry.stops["mainland"],
+                      seq >= 0, seq < stopIDs.count,
+                      let lineID = entry.gtfsId?.value, !lineID.isEmpty
+                else {
+                    throw MainlandProviderError.invalidRequest("Mainland route is missing a line or stop identifier.")
+                }
+                result = try await mainland.fetchEtas(
+                    lineID: lineID,
+                    stopID: stopIDs[seq],
+                    stopSequence: seq,
+                    language: language
+                )
+            } else {
+                result = await app.provider.fetchEtas(entry: entry, seq: seq, db: db, language: language)
+            }
+            guard !Task.isCancelled else { return }
+            etas = result
+            etaError = nil
+            lastUpdated = Date()
+        } catch is CancellationError {
+            return
+        } catch {
+            guard !Task.isCancelled else { return }
+            etas = []
+            etaError = MainlandErrorPresentation.message(for: error)
+        }
         isLoading = false
     }
 }

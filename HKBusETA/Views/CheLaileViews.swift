@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Loads a 车来了 line detail, registers it as a synthetic database entry and
-/// then shows the standard route detail / ETA screens.
-struct CheLaileLineLoaderView: View {
+/// Loads a mainland line detail from the active base-data provider, registers
+/// it as a synthetic database entry and then shows the standard route screens.
+struct MainlandLineLoaderView: View {
     @Environment(AppState.self) private var app
     let lineId: String
     let title: String
@@ -21,7 +21,7 @@ struct CheLaileLineLoaderView: View {
                 }
             } else if failed {
                 ContentUnavailableView {
-                    Label(L10n.t("chelaile.loadFailed"), systemImage: "exclamationmark.triangle")
+                    Label(L10n.t("mainland.loadFailed"), systemImage: "exclamationmark.triangle")
                 } actions: {
                     Button(L10n.t("common.retry")) {
                         failed = false
@@ -44,26 +44,30 @@ struct CheLaileLineLoaderView: View {
     }
 
     private func load() async {
-        guard let provider = app.provider as? CheLaileProvider else {
+        guard let provider = app.mainlandProvider else {
             failed = true
             return
         }
         do {
-            guard let payload = try await provider.linePayload(lineId: lineId) else {
+            guard let payload = try await provider.linePayload(lineID: lineId) else {
                 failed = true
                 return
             }
-            app.data.registerSynthetic(entry: payload.entry, stops: payload.stops)
-            routeKey = payload.entry.routeKey
+            guard let shared = MainlandRouteAdapter.makeSharedRoute(from: payload) else {
+                failed = true
+                return
+            }
+            app.data.registerSynthetic(entry: shared.entry, stops: shared.stops)
+            routeKey = shared.entry.routeKey
         } catch {
             failed = true
         }
     }
 }
 
-/// Lightweight info page for metro lines: the CheLaile bus API carries the
-/// line's origin/terminus but not its intermediate stops.
-struct CheLaileMetroInfoView: View {
+/// Lightweight info page for a metro result when the active source has no
+/// intermediate stop payload.
+struct MainlandMetroInfoView: View {
     let name: String
     let origin: String
     let destination: String
@@ -71,11 +75,11 @@ struct CheLaileMetroInfoView: View {
     var body: some View {
         List {
             Section {
-                LabeledContent(L10n.t("chelaile.metroStart"), value: origin)
-                LabeledContent(L10n.t("chelaile.metroEnd"), value: destination)
+                LabeledContent(L10n.t("mainland.metroStart"), value: origin)
+                LabeledContent(L10n.t("mainland.metroEnd"), value: destination)
             }
             Section {
-                Text(L10n.t("chelaile.metroNotice"))
+                Text(L10n.t("mainland.metroNotice"))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -85,20 +89,22 @@ struct CheLaileMetroInfoView: View {
     }
 }
 
-/// Stop departure board for 车来了 regions.
-struct CheLaileStopBoardView: View {
+/// Stop departure board for mainland regions. Base providers may only expose
+/// stop identity; ETA rows are supplied by the replaceable realtime provider.
+struct MainlandStopBoardView: View {
     @Environment(AppState.self) private var app
-    let physicalStId: String
-    let namesakeStId: String?
+    let stopID: String
+    let namesakeStopID: String?
     let title: String
 
-    @State private var rows: [CheLaileBoardLine] = []
-    @State private var metros: [CheLaileMetroLine] = []
+    @State private var rows: [MainlandBoardLine] = []
+    @State private var otherLines: [MainlandTransitLine] = []
     @State private var isLoading = false
+    @State private var errorMessage: String?
 
     var body: some View {
         Group {
-            if isLoading && rows.isEmpty && metros.isEmpty {
+            if isLoading && rows.isEmpty && otherLines.isEmpty {
                 VStack(spacing: DesignTokens.Spacing.m) {
                     ProgressView()
                     Text(L10n.t("status.loading"))
@@ -106,7 +112,15 @@ struct CheLaileStopBoardView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if rows.isEmpty && metros.isEmpty {
+            } else if let errorMessage {
+                ContentUnavailableView {
+                    Label(L10n.t("error.mainland.requestFailed"), systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(errorMessage)
+                } actions: {
+                    Button(L10n.t("common.retry")) { Task { await load() } }
+                }
+            } else if rows.isEmpty && otherLines.isEmpty {
                 ContentUnavailableView {
                     Label(L10n.t("stop.noRoutes"), systemImage: "bus")
                 } actions: {
@@ -119,19 +133,19 @@ struct CheLaileStopBoardView: View {
                     if !rows.isEmpty {
                         Section {
                             ForEach(rows) { row in
-                                NavigationLink(value: CheLaileLineTarget(
-                                    lineId: row.lineId,
+                                NavigationLink(value: MainlandLineTarget(
+                                    lineId: row.lineID,
                                     title: row.lineName,
-                                    seq: max(row.targetOrder - 1, 0)
+                                    seq: row.targetStopSequence.map { max($0 - 1, 0) }
                                 )) {
-                                    CheLaileBoardRowView(row: row)
+                                    MainlandBoardRowView(row: row)
                                 }
                             }
                         }
                     }
-                    if !metros.isEmpty {
-                        Section(L10n.t("chelaile.metros")) {
-                            ForEach(metros) { metro in
+                    if !otherLines.isEmpty {
+                        Section(L10n.t("mainland.metros")) {
+                            ForEach(otherLines) { metro in
                                 HStack(spacing: DesignTokens.Spacing.s) {
                                     Circle()
                                         .fill(metroColor(metro.color))
@@ -147,16 +161,22 @@ struct CheLaileStopBoardView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: physicalStId) { await load() }
+        .task(id: stopID) { await load() }
     }
 
     private func load() async {
-        guard let provider = app.provider as? CheLaileProvider else { return }
-        if rows.isEmpty && metros.isEmpty { isLoading = true }
+        guard let provider = app.mainlandProvider else { return }
+        if rows.isEmpty && otherLines.isEmpty { isLoading = true }
         defer { isLoading = false }
-        if let result = try? await provider.stopBoard(physicalStId: physicalStId, namesakeStId: namesakeStId) {
+        do {
+            let result = try await provider.stopBoard(stopID: stopID, namesakeStopID: namesakeStopID)
             rows = result.rows
-            metros = result.metros
+            otherLines = result.otherLines
+            errorMessage = nil
+        } catch is CancellationError {
+            return
+        } catch {
+            errorMessage = MainlandErrorPresentation.message(for: error)
         }
     }
 
@@ -168,18 +188,18 @@ struct CheLaileStopBoardView: View {
     }
 }
 
-struct CheLaileBoardRowView: View {
-    let row: CheLaileBoardLine
+struct MainlandBoardRowView: View {
+    let row: MainlandBoardLine
 
     var body: some View {
         HStack(spacing: DesignTokens.Spacing.s) {
-            RouteBadge(route: row.lineName, entry: nil, colorHex: CheLaileProvider.color(for: row.lineName))
+            RouteBadge(route: row.lineName, entry: nil, colorHex: MainlandProviderPalette.color(for: row.lineName))
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(row.destination)")
                     .font(.body)
                     .lineLimit(1)
-                if !row.status.isEmpty {
-                    Text(row.status)
+                if let status = row.status, !status.isEmpty {
+                    Text(status)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

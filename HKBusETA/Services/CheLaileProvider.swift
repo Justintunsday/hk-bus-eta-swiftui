@@ -1,15 +1,23 @@
 import Foundation
 
-/// Mainland-China cities served through the 车来了 (CheLaile) H5 API.
+/// Legacy mainland compatibility provider backed by the unofficial 车来了
+/// (CheLaile) H5 API. Production composition is owned by MainlandProvider;
+/// this type is deliberately marked legacy and can be replaced by an
+/// authorized realtime provider without changing the UI.
 ///
 /// Unlike the Hong Kong provider this one has no static route database: every
 /// screen is backed by on-demand queries (search / nearby / stop / line).
-struct CheLaileProvider: TransitProvider {
+struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, MainlandRealtimeProvider {
     let cityId: String
     let cityName: String
 
     var id: String { "cl-\(cityId)" }
     var regionName: String { cityName }
+    var city: MainlandCityIdentifier {
+        MainlandCityIdentifier(name: cityName, citycode: cityId)
+    }
+    var dataSource: MainlandDataSource { .legacyFallback }
+    var supportsRealtimeETAs: Bool { true }
     var timeZone: TimeZone { TimeZone(identifier: "Asia/Shanghai")! }
     var operators: OperatorRegistry { OperatorRegistry(operators: [:]) }
     var databaseURLs: [URL] { [] }
@@ -42,40 +50,51 @@ struct CheLaileProvider: TransitProvider {
     // MARK: - ETA
 
     func fetchEtas(entry: RouteEntry, seq: Int, db: EtaDB, language: AppLanguage) async -> [Eta] {
-        guard let stops = entry.stops["chelaile"], seq >= 0, seq < stops.count,
-              let lineId = entry.gtfsId?.value, !lineId.isEmpty
+        guard let stops = entry.stops["mainland"] ?? entry.stops["chelaile"],
+              seq >= 0, seq < stops.count,
+              let lineID = entry.gtfsId?.value, !lineID.isEmpty
         else { return [] }
+        return (try? await fetchEtas(
+            lineID: lineID,
+            stopID: stops[seq],
+            stopSequence: seq,
+            language: language
+        )) ?? []
+    }
 
-        let physicalStId = stops[seq]
-        do {
-            let detail = try await CheLaileClient().stopDetail(
-                cityId: cityId,
-                physicalStId: physicalStId,
-                namesakeStId: nil,
-                lat: nil,
-                lng: nil
-            )
-            var etas: [Eta] = []
-            for station in detail.stationList ?? [] {
-                for item in station.lines ?? [] where item.line?.lineId == lineId {
-                    let destination = item.line?.endSn ?? ""
-                    for bus in item.stnStates ?? [] {
-                        guard let date = Self.arrivalDate(for: bus) else { continue }
-                        etas.append(
-                            Eta(
-                                eta: RegionClock.isoString(from: date),
-                                remark: Terminal(en: "", zh: ""),
-                                dest: Terminal(en: destination, zh: destination),
-                                co: ""
-                            )
+    func fetchEtas(
+        lineID: String,
+        stopID: String,
+        stopSequence: Int?,
+        language: AppLanguage
+    ) async throws -> [Eta] {
+        try Task.checkCancellation()
+        let detail = try await CheLaileClient().stopDetail(
+            cityId: cityId,
+            physicalStId: stopID,
+            namesakeStId: nil,
+            lat: nil,
+            lng: nil
+        )
+        try Task.checkCancellation()
+        var etas: [Eta] = []
+        for station in detail.stationList ?? [] {
+            for item in station.lines ?? [] where item.line?.lineId == lineID {
+                let destination = item.line?.endSn ?? ""
+                for bus in item.stnStates ?? [] {
+                    guard let date = Self.arrivalDate(for: bus) else { continue }
+                    etas.append(
+                        Eta(
+                            eta: RegionClock.isoString(from: date),
+                            remark: Terminal(en: "", zh: ""),
+                            dest: Terminal(en: destination, zh: destination),
+                            co: ""
                         )
-                    }
+                    )
                 }
             }
-            return etas.sorted { $0.eta < $1.eta }
-        } catch {
-            return []
         }
+        return etas.sorted { $0.eta < $1.eta }
     }
 
     private static func arrivalDate(for bus: CheLaileLineItem.Bus) -> Date? {
@@ -90,58 +109,74 @@ struct CheLaileProvider: TransitProvider {
 
     // MARK: - Search
 
-    func search(keyword: String) async throws -> CheLaileSearchResults {
+    func search(keyword: String) async throws -> MainlandSearchResults {
         let response = try await CheLaileClient().search(cityId: cityId, keyword: keyword)
-        var lines: [CheLaileLineHit] = []
-        var stops: [CheLaileStopHit] = []
+        var lines: [MainlandLineSummary] = []
+        var stops: [MainlandStopSummary] = []
         for line in response.result?.lines ?? [] {
             guard let lineId = line.lineId, !lineId.isEmpty else { continue }
             lines.append(
-                CheLaileLineHit(
+                MainlandLineSummary(
                     id: "\(lineId)-\(line.direction ?? 0)",
-                    lineId: lineId,
-                    lineName: line.name ?? line.lineNo ?? "",
-                    orig: line.startSn ?? "",
-                    dest: line.endSn ?? "",
-                    isSubway: line.subwayV2 == 1
+                    lineID: lineId,
+                    name: line.name ?? line.lineNo ?? lineId,
+                    origin: line.startSn ?? "",
+                    destination: line.endSn ?? "",
+                    operatorName: nil,
+                    mode: line.subwayV2 == 1 ? .metro : .bus,
+                    serviceStatus: nil,
+                    firstDeparture: nil,
+                    lastDeparture: nil,
+                    fare: nil,
+                    city: city,
+                    source: .legacyFallback
                 )
             )
         }
         for station in response.result?.stations ?? [] {
             guard let physical = station.physicalStId, !physical.isEmpty else { continue }
             stops.append(
-                CheLaileStopHit(
+                MainlandStopSummary(
                     id: physical,
-                    physicalStId: physical,
-                    namesakeStId: station.namesakeStId,
+                    stopID: physical,
+                    namesakeStopID: station.namesakeStId,
                     name: station.sn ?? "",
-                    subtitle: station.isSubway == true ? nil : nil
+                    subtitle: nil,
+                    location: station.lat.flatMap { lat in
+                        station.lng.flatMap { lng in MainlandCoordinate.wgs84(latitude: lat, longitude: lng) }
+                    },
+                    city: city,
+                    source: .legacyFallback
                 )
             )
         }
-        return CheLaileSearchResults(lines: lines, stops: stops)
+        return MainlandSearchResults(lines: lines, stops: stops)
     }
 
     // MARK: - Nearby
 
-    func nearby(lat: Double, lng: Double, limit: Int = 20) async throws -> [CheLaileNearbyStop] {
-        let response = try await CheLaileClient().nearby(cityId: cityId, lat: lat, lng: lng)
+    func nearby(latitude: Double, longitude: Double, limit: Int = 20) async throws -> [MainlandNearbyStop] {
+        let response = try await CheLaileClient().nearby(cityId: cityId, lat: latitude, lng: longitude)
         return (response.nearSts ?? []).prefix(limit).compactMap { stop in
             guard let physical = stop.physicalStId, !physical.isEmpty else { return nil }
             let arrivals = (stop.lines ?? []).prefix(3).map { item in
-                CheLaileNearbyArrival(
+                MainlandNearbyArrival(
+                    lineID: item.line?.lineId,
                     lineName: item.line?.name ?? "",
-                    dest: item.line?.endSn ?? "",
-                    minutes: Self.minutes(for: item)
+                    destination: item.line?.endSn ?? "",
+                    minutes: Self.minutes(for: item),
+                    source: .legacyFallback
                 )
             }
-            return CheLaileNearbyStop(
+            return MainlandNearbyStop(
                 id: physical,
-                physicalStId: physical,
-                namesakeStId: stop.namesakeStId,
+                stopID: physical,
+                namesakeStopID: stop.namesakeStId,
                 name: stop.sn ?? "",
-                distance: stop.distance,
-                arrivals: Array(arrivals)
+                distanceMeters: stop.distance.map(Double.init),
+                location: nil,
+                arrivals: Array(arrivals),
+                source: .legacyFallback
             )
         }
     }
@@ -155,23 +190,23 @@ struct CheLaileProvider: TransitProvider {
 
     // MARK: - Stop board
 
-    func stopBoard(physicalStId: String, namesakeStId: String?) async throws -> CheLaileStopBoardResult {
+    func stopBoard(stopID: String, namesakeStopID: String?) async throws -> MainlandStopBoardResult {
         let detail = try await CheLaileClient().stopDetail(
             cityId: cityId,
-            physicalStId: physicalStId,
-            namesakeStId: namesakeStId,
+            physicalStId: stopID,
+            namesakeStId: namesakeStopID,
             lat: nil,
             lng: nil
         )
-        var rows: [CheLaileBoardLine] = []
+        var rows: [MainlandBoardLine] = []
         var seen = Set<String>()
-        var metros: [CheLaileMetroLine] = []
+        var otherLines: [MainlandTransitLine] = []
         var seenMetros = Set<String>()
         for station in detail.stationList ?? [] {
             for metro in station.metros ?? [] {
                 let name = metro.fullName ?? metro.lineNo ?? ""
                 guard !name.isEmpty, seenMetros.insert(name).inserted else { continue }
-                metros.append(CheLaileMetroLine(id: name, name: name, color: metro.color))
+                otherLines.append(MainlandTransitLine(id: name, name: name, mode: .metro, color: metro.color))
             }
             for item in station.lines ?? [] {
                 guard let line = item.line, let lineId = line.lineId, !lineId.isEmpty else { continue }
@@ -180,14 +215,15 @@ struct CheLaileProvider: TransitProvider {
                 guard seen.insert(rowId).inserted else { continue }
                 let etas = (item.stnStates ?? []).compactMap { Self.minutes(bus: $0) }
                 rows.append(
-                    CheLaileBoardLine(
+                    MainlandBoardLine(
                         id: rowId,
-                        lineId: lineId,
+                        lineID: lineId,
                         lineName: line.name ?? "",
                         destination: line.endSn ?? "",
-                        targetOrder: order,
-                        status: item.preArrivalTime.map { L10n.t("chelaile.scheduled") + " \($0)" } ?? "",
-                        minutes: etas
+                        targetStopSequence: order,
+                        status: item.preArrivalTime.map { L10n.t("chelaile.scheduled") + " \($0)" },
+                        minutes: etas,
+                        source: .legacyFallback
                     )
                 )
             }
@@ -195,7 +231,7 @@ struct CheLaileProvider: TransitProvider {
         rows.sort {
             ($0.minutes.first ?? 999) < ($1.minutes.first ?? 999)
         }
-        return CheLaileStopBoardResult(rows: rows, metros: metros)
+        return MainlandStopBoardResult(rows: rows, otherLines: otherLines)
     }
 
     private static func minutes(bus: CheLaileLineItem.Bus) -> Int? {
@@ -205,111 +241,61 @@ struct CheLaileProvider: TransitProvider {
 
     // MARK: - Line payload (synthesizes an EtaDB entry for the shared UI)
 
-    struct LinePayload: Sendable {
-        let entry: RouteEntry
-        let stops: [String: StopEntry]
-    }
-
-    func linePayload(lineId: String) async throws -> LinePayload? {
-        let detail = try await CheLaileClient().lineDetail(cityId: cityId, lineId: lineId, lat: nil, lng: nil)
+    func linePayload(lineID: String) async throws -> MainlandLinePayload? {
+        let detail = try await CheLaileClient().lineDetail(cityId: cityId, lineId: lineID, lat: nil, lng: nil)
         guard let line = detail.line, let stations = detail.stations, !stations.isEmpty else { return nil }
 
-        let routeName = line.name ?? lineId
+        let routeName = line.name ?? lineID
         let origin = line.startSn ?? stations.first?.sn ?? ""
         let destination = line.endSn ?? stations.last?.sn ?? ""
 
-        var stopIDs: [String] = []
-        var stopEntries: [String: StopEntry] = [:]
+        var stopSummaries: [MainlandStopSummary] = []
         for station in stations {
             guard let physical = station.physicalStId, !physical.isEmpty else { continue }
-            stopIDs.append(physical)
-            if let lat = station.wgsLat, let lng = station.wgsLng {
-                let name = station.sn ?? physical
-                stopEntries[physical] = StopEntry(
-                    location: StopLocation(lat: lat, lng: lng),
-                    name: Terminal(en: name, zh: name)
-                )
+            let name = station.sn ?? physical
+            let location = station.wgsLat.flatMap { lat in
+                station.wgsLng.flatMap { lng in MainlandCoordinate.wgs84(latitude: lat, longitude: lng) }
             }
+            stopSummaries.append(MainlandStopSummary(
+                id: physical,
+                stopID: physical,
+                namesakeStopID: station.namesakeStId,
+                name: name,
+                subtitle: station.order.map { "Stop \($0)" },
+                location: location,
+                city: city,
+                source: .legacyFallback
+            ))
         }
-        guard !stopIDs.isEmpty else { return nil }
-
-        let entry = RouteEntry(
-            route: routeName,
-            co: [],
-            orig: Terminal(en: origin, zh: origin),
-            dest: Terminal(en: destination, zh: destination),
-            fares: nil,
-            faresHoliday: nil,
-            freq: nil,
-            jt: nil,
-            seq: stopIDs.count,
-            serviceType: FlexibleString("1"),
-            stops: ["chelaile": stopIDs],
-            bound: [:],
-            gtfsId: FlexibleString(lineId),
-            nlbId: nil
+        guard !stopSummaries.isEmpty else { return nil }
+        let summary = MainlandLineSummary(
+            id: line.lineId ?? lineID,
+            lineID: line.lineId ?? lineID,
+            name: routeName,
+            origin: origin,
+            destination: destination,
+            operatorName: nil,
+            mode: .bus,
+            serviceStatus: nil,
+            firstDeparture: line.firstTime,
+            lastDeparture: line.lastTime,
+            fare: line.price,
+            city: city,
+            source: .legacyFallback
         )
-        return LinePayload(entry: entry, stops: stopEntries)
+        return MainlandLinePayload(
+            line: summary,
+            stops: stopSummaries,
+            polyline: stopSummaries.compactMap(\MainlandStopSummary.location),
+            coordinateSystem: .wgs84,
+            source: .legacyFallback
+        )
     }
 }
 
+/// Source-compatibility alias for integrations that referenced the old name.
+/// New code must use `LegacyCheLaileProvider` or `MainlandTransitProvider`.
+@available(*, deprecated, message: "Use LegacyCheLaileProvider or MainlandTransitProvider")
+typealias CheLaileProvider = LegacyCheLaileProvider
+
 // MARK: - Query result models
-
-struct CheLaileSearchResults: Sendable {
-    var lines: [CheLaileLineHit] = []
-    var stops: [CheLaileStopHit] = []
-}
-
-struct CheLaileLineHit: Identifiable, Hashable, Sendable {
-    let id: String
-    let lineId: String
-    let lineName: String
-    let orig: String
-    let dest: String
-    var isSubway: Bool = false
-}
-
-struct CheLaileStopHit: Identifiable, Hashable, Sendable {
-    let id: String
-    let physicalStId: String
-    let namesakeStId: String?
-    let name: String
-    let subtitle: String?
-}
-
-struct CheLaileNearbyArrival: Sendable, Hashable {
-    let lineName: String
-    let dest: String
-    let minutes: Int?
-}
-
-struct CheLaileNearbyStop: Identifiable, Sendable {
-    let id: String
-    let physicalStId: String
-    let namesakeStId: String?
-    let name: String
-    let distance: Int?
-    let arrivals: [CheLaileNearbyArrival]
-}
-
-struct CheLaileBoardLine: Identifiable, Sendable {
-    let id: String
-    let lineId: String
-    let lineName: String
-    let destination: String
-    let targetOrder: Int
-    let status: String
-    let minutes: [Int]
-}
-
-struct CheLaileMetroLine: Identifiable, Sendable {
-    let id: String
-    let name: String
-    /// Upstream "r,g,b" text.
-    let color: String?
-}
-
-struct CheLaileStopBoardResult: Sendable {
-    var rows: [CheLaileBoardLine] = []
-    var metros: [CheLaileMetroLine] = []
-}

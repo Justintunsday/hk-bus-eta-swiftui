@@ -54,9 +54,40 @@ struct Terminal: Codable, Hashable, Sendable {
     }
 }
 
+/// Coordinate reference system for a stop position.
+///
+/// The bundled Hong Kong database and MapKit use WGS-84. AMap returns GCJ-02;
+/// those coordinates are intentionally kept tagged instead of being passed
+/// to MapKit as if they were WGS-84. Conversion is not performed without a
+/// documented, approved transform.
+enum TransitCoordinateSystem: String, Codable, Hashable, Sendable {
+    case wgs84
+    case gcj02
+}
+
 struct StopLocation: Codable, Hashable, Sendable {
     let lat: Double
     let lng: Double
+    let coordinateSystem: TransitCoordinateSystem
+
+    init(lat: Double, lng: Double, coordinateSystem: TransitCoordinateSystem = .wgs84) {
+        self.lat = lat
+        self.lng = lng
+        self.coordinateSystem = coordinateSystem
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        lat = try container.decode(Double.self, forKey: .lat)
+        lng = try container.decode(Double.self, forKey: .lng)
+        coordinateSystem = try container.decodeIfPresent(TransitCoordinateSystem.self, forKey: .coordinateSystem) ?? .wgs84
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case lat
+        case lng
+        case coordinateSystem
+    }
 }
 
 struct StopEntry: Codable, Sendable {

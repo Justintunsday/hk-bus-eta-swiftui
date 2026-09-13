@@ -5,8 +5,9 @@ import UIKit
 struct NearbyView: View {
     @Environment(AppState.self) private var app
     @State private var results: [NearbyStop] = []
-    @State private var chelaileStops: [CheLaileNearbyStop] = []
-    @State private var isLoadingChelaile = false
+    @State private var mainlandStops: [MainlandNearbyStop] = []
+    @State private var isLoadingMainland = false
+    @State private var mainlandError: String?
 
     private var language: AppLanguage { L10n.language }
 
@@ -22,11 +23,11 @@ struct NearbyView: View {
             .navigationDestination(for: RouteEtaTarget.self) { target in
                 RouteEtaView(routeKey: target.routeKey, seq: target.seq)
             }
-            .navigationDestination(for: CheLaileLineTarget.self) { target in
-                CheLaileLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
+            .navigationDestination(for: MainlandLineTarget.self) { target in
+                MainlandLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
             }
-            .navigationDestination(for: CheLaileStopTarget.self) { target in
-                CheLaileStopBoardView(physicalStId: target.physicalStId, namesakeStId: target.namesakeStId, title: target.title)
+            .navigationDestination(for: MainlandStopTarget.self) { target in
+                MainlandStopBoardView(stopID: target.stopID, namesakeStopID: target.namesakeStopID, title: target.title)
             }
         }
         .task {
@@ -70,8 +71,8 @@ struct NearbyView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
-        } else if app.region.isQueryMode {
-            chelaileContent
+        } else if app.mainlandProvider != nil {
+            mainlandContent
         } else if app.location.location == nil || results.isEmpty {
             VStack(spacing: DesignTokens.Spacing.m) {
                 ProgressView()
@@ -106,8 +107,8 @@ struct NearbyView: View {
     }
 
     @ViewBuilder
-    private var chelaileContent: some View {
-        if app.location.location == nil || (isLoadingChelaile && chelaileStops.isEmpty) {
+    private var mainlandContent: some View {
+        if app.location.location == nil || (isLoadingMainland && mainlandStops.isEmpty) {
             VStack(spacing: DesignTokens.Spacing.m) {
                 ProgressView()
                     .tint(DesignTokens.accent)
@@ -116,7 +117,15 @@ struct NearbyView: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if chelaileStops.isEmpty {
+        } else if let mainlandError {
+            ContentUnavailableView {
+                Label(L10n.t("error.mainland.requestFailed"), systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(mainlandError)
+            } actions: {
+                Button(L10n.t("common.retry")) { recompute() }
+            }
+        } else if mainlandStops.isEmpty {
             ContentUnavailableView {
                 Label(L10n.t("nearby.title"), systemImage: "mappin.slash")
             } description: {
@@ -127,10 +136,10 @@ struct NearbyView: View {
                 }
             }
         } else {
-            List(chelaileStops) { stop in
-                NavigationLink(value: CheLaileStopTarget(
-                    physicalStId: stop.physicalStId,
-                    namesakeStId: stop.namesakeStId,
+            List(mainlandStops) { stop in
+                NavigationLink(value: MainlandStopTarget(
+                    stopID: stop.stopID,
+                    namesakeStopID: stop.namesakeStopID,
                     title: stop.name
                 )) {
                     HStack {
@@ -145,8 +154,8 @@ struct NearbyView: View {
                             }
                         }
                         Spacer()
-                        if let distance = stop.distance {
-                            Text("\(distance) m")
+                        if let distance = stop.distanceMeters {
+                            Text("\(Int(distance.rounded())) m")
                                 .font(.caption)
                                 .monospacedDigit()
                                 .foregroundStyle(.secondary)
@@ -158,7 +167,7 @@ struct NearbyView: View {
         }
     }
 
-    private func arrivalSummary(_ arrivals: [CheLaileNearbyArrival]) -> String {
+    private func arrivalSummary(_ arrivals: [MainlandNearbyArrival]) -> String {
         arrivals.map { arrival in
             if let minutes = arrival.minutes {
                 return "\(arrival.lineName) \(minutes)\(L10n.t("unit.minutes"))"
@@ -171,12 +180,21 @@ struct NearbyView: View {
     private func recompute() {
         guard let location = app.location.location, app.data.db != nil else { return }
 
-        if let provider = app.provider as? CheLaileProvider {
-            isLoadingChelaile = chelaileStops.isEmpty
+        if let provider = app.mainlandProvider {
+            isLoadingMainland = mainlandStops.isEmpty
             Task {
-                let stops = (try? await provider.nearby(lat: location.coordinate.latitude, lng: location.coordinate.longitude)) ?? []
-                chelaileStops = stops
-                isLoadingChelaile = false
+                do {
+                    let stops = try await provider.nearby(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, limit: 20)
+                    guard !Task.isCancelled else { return }
+                    mainlandStops = stops
+                    mainlandError = nil
+                } catch is CancellationError {
+                    return
+                } catch {
+                    mainlandStops = []
+                    mainlandError = MainlandErrorPresentation.message(for: error)
+                }
+                isLoadingMainland = false
             }
             return
         }

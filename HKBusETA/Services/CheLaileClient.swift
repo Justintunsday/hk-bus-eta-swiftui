@@ -2,11 +2,12 @@ import CommonCrypto
 import CryptoKit
 import Foundation
 
-/// Minimal client for the 车来了 (CheLaile) H5 API.
+/// Minimal legacy client for the 车来了 (CheLaile) H5 API.
 ///
 /// Reverse-engineered endpoints used by the open-source chelaile-mcp project:
 /// requests are MD5-signed, responses are AES-256-ECB encrypted envelopes.
-/// Unofficial and may break whenever the upstream changes.
+/// Unofficial and may break whenever the upstream changes. It is retained only
+/// as a compatibility fallback until an authorized realtime provider is wired.
 struct CheLaileClient: Sendable {
     private static let baseURL = "https://web.chelaile.net.cn/api"
     private static let signSalt = "qwihrnbtmj"
@@ -114,7 +115,20 @@ struct CheLaileClient: Sendable {
         request.setValue("1", forHTTPHeaderField: "xweb_xhr")
         request.setValue("zh-CN,zh;q=0.9", forHTTPHeaderField: "Accept-Language")
 
-        let (data, _) = try await session.data(for: request)
+        try Task.checkCancellation()
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch let error as URLError where error.code == .cancelled {
+            throw CancellationError()
+        }
+        try Task.checkCancellation()
+        guard let http = response as? HTTPURLResponse else {
+            throw CheLaileError.invalidResponse
+        }
+        guard (200...299).contains(http.statusCode) else {
+            throw CheLaileError.httpStatus(http.statusCode)
+        }
         let body = String(decoding: data, as: UTF8.self)
         let payload = try Self.decodeEnvelope(body)
         return try JSONDecoder().decode(T.self, from: payload)
@@ -150,16 +164,56 @@ struct CheLaileClient: Sendable {
 
         guard let outerData = String(body[start...end]).data(using: .utf8),
               let outer = try? JSONSerialization.jsonObject(with: outerData) as? [String: Any],
-              let jsonr = outer["jsonr"] as? [String: Any],
-              let payload = jsonr["data"] as? [String: Any]
+              let jsonr = outer["jsonr"] as? [String: Any]
         else {
             throw CheLaileError.invalidResponse
         }
 
-        if let encrypted = payload["encryptResult"] as? String {
-            return try decrypt(encrypted)
+        try validateBusinessStatus(jsonr)
+        guard let payload = jsonr["data"] as? [String: Any] else {
+            throw CheLaileError.invalidResponse
         }
-        return try JSONSerialization.data(withJSONObject: payload)
+
+        let payloadData: Data
+        if let encrypted = payload["encryptResult"] as? String {
+            payloadData = try decrypt(encrypted)
+        } else {
+            payloadData = try JSONSerialization.data(withJSONObject: payload)
+        }
+        if let object = try? JSONSerialization.jsonObject(with: payloadData) as? [String: Any] {
+            try validateBusinessStatus(object)
+        }
+        return payloadData
+    }
+
+    /// CheLaile has used both `status` and `code` fields in different H5
+    /// envelopes. Treat an explicit non-success value as an error instead of
+    /// allowing the UI to display it as an empty board.
+    private static func validateBusinessStatus(_ object: [String: Any]) throws {
+        let message = (object["info"] as? String)
+            ?? (object["message"] as? String)
+            ?? (object["msg"] as? String)
+            ?? ""
+
+        if let success = object["success"] as? Bool, !success {
+            throw CheLaileError.upstream(code: "success=false", message: message)
+        }
+        for key in ["status", "code", "errorCode"] {
+            guard let value = object[key] else { continue }
+            let text: String
+            if let string = value as? String {
+                text = string
+            } else if let number = value as? NSNumber {
+                text = number.stringValue
+            } else {
+                continue
+            }
+            let normalized = text.lowercased()
+            let successValues = ["0", "200", "ok", "success", "true"]
+            if !successValues.contains(normalized) {
+                throw CheLaileError.upstream(code: text, message: message)
+            }
+        }
     }
 
     private static func decrypt(_ base64: String) throws -> Data {
@@ -200,7 +254,27 @@ struct CheLaileClient: Sendable {
 enum CheLaileError: Error {
     case invalidURL
     case invalidResponse
+    case httpStatus(Int)
+    case upstream(code: String, message: String)
     case decryptFailed
+}
+
+extension CheLaileError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "CheLaile request URL is invalid."
+        case .invalidResponse:
+            return "CheLaile returned an invalid response."
+        case .httpStatus(let status):
+            return "CheLaile HTTP request failed (status \(status))."
+        case .upstream(let code, let message):
+            let suffix = message.isEmpty ? "" : ": \(message)"
+            return "CheLaile service error \(code)\(suffix)"
+        case .decryptFailed:
+            return "CheLaile response decryption failed."
+        }
+    }
 }
 
 // MARK: - Responses

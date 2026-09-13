@@ -81,8 +81,11 @@ struct RouteDetailView: View {
                 stopId: stopId,
                 nameZh: stop?.name.zh ?? stopId,
                 nameEn: stop?.name.en ?? stopId,
-                lat: stop?.location.lat,
-                lng: stop?.location.lng
+                // MapKit expects WGS-84. AMap GCJ-02 coordinates remain
+                // explicitly tagged in StopLocation and are not silently
+                // plotted until an approved conversion boundary exists.
+                lat: stop?.location.coordinateSystem == .wgs84 ? stop?.location.lat : nil,
+                lng: stop?.location.coordinateSystem == .wgs84 ? stop?.location.lng : nil
             )
         }
     }

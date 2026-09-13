@@ -7,8 +7,9 @@ struct SearchView: View {
     @State private var filter: TransportFilter = .all
     @State private var routeKeys: [String] = []
     @State private var stops: [StopSearchItem] = []
-    @State private var chelaileLines: [CheLaileLineHit] = []
-    @State private var chelaileStops: [CheLaileStopHit] = []
+    @State private var mainlandLines: [MainlandLineSummary] = []
+    @State private var mainlandStops: [MainlandStopSummary] = []
+    @State private var mainlandError: String?
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
 
@@ -29,14 +30,14 @@ struct SearchView: View {
             .navigationDestination(for: StopTarget.self) { target in
                 StopEtaView(stopId: target.stopId)
             }
-            .navigationDestination(for: CheLaileLineTarget.self) { target in
-                CheLaileLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
+            .navigationDestination(for: MainlandLineTarget.self) { target in
+                MainlandLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
             }
-            .navigationDestination(for: CheLaileStopTarget.self) { target in
-                CheLaileStopBoardView(physicalStId: target.physicalStId, namesakeStId: target.namesakeStId, title: target.title)
+            .navigationDestination(for: MainlandStopTarget.self) { target in
+                MainlandStopBoardView(stopID: target.stopID, namesakeStopID: target.namesakeStopID, title: target.title)
             }
-            .navigationDestination(for: CheLaileMetroTarget.self) { target in
-                CheLaileMetroInfoView(name: target.name, origin: target.origin, destination: target.destination)
+            .navigationDestination(for: MainlandMetroTarget.self) { target in
+                MainlandMetroInfoView(name: target.name, origin: target.origin, destination: target.destination)
             }
         }
         .searchable(text: $query, prompt: Text(L10n.t("search.placeholder")))
@@ -52,8 +53,8 @@ struct SearchView: View {
 
     @ViewBuilder
     private var content: some View {
-        if app.region.isQueryMode {
-            chelaileContent
+        if app.mainlandProvider != nil {
+            mainlandContent
         } else if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             recentContent
         } else if routeKeys.isEmpty && stops.isEmpty {
@@ -89,17 +90,25 @@ struct SearchView: View {
     }
 
     @ViewBuilder
-    private var chelaileContent: some View {
+    private var mainlandContent: some View {
         if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             ContentUnavailableView {
                 Label(L10n.t("search.title"), systemImage: "bus")
             } description: {
                 Text(L10n.t("search.empty.hint"))
             }
-        } else if isSearching && chelaileLines.isEmpty && chelaileStops.isEmpty {
+        } else if isSearching && mainlandLines.isEmpty && mainlandStops.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if chelaileLines.isEmpty && chelaileStops.isEmpty {
+        } else if let mainlandError {
+            ContentUnavailableView {
+                Label(L10n.t("error.mainland.requestFailed"), systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(mainlandError)
+            } actions: {
+                Button(L10n.t("common.retry")) { performSearch() }
+            }
+        } else if mainlandLines.isEmpty && mainlandStops.isEmpty {
             ContentUnavailableView {
                 Label(L10n.t("search.noResults"), systemImage: "magnifyingglass")
             } description: {
@@ -107,25 +116,25 @@ struct SearchView: View {
             }
         } else {
             List {
-                if !chelaileLines.isEmpty {
+                if !mainlandLines.isEmpty {
                     Section(L10n.t("search.section.routes")) {
-                        ForEach(chelaileLines) { hit in
-                            if hit.isSubway {
-                                NavigationLink(value: CheLaileMetroTarget(name: hit.lineName, origin: hit.orig, destination: hit.dest)) {
-                                    CheLaileLineRow(hit: hit)
+                        ForEach(mainlandLines) { hit in
+                            if hit.mode == .metro {
+                                NavigationLink(value: MainlandMetroTarget(name: hit.name, origin: hit.origin, destination: hit.destination)) {
+                                    MainlandLineRow(hit: hit)
                                 }
                             } else {
-                                NavigationLink(value: CheLaileLineTarget(lineId: hit.lineId, title: hit.lineName, seq: nil)) {
-                                    CheLaileLineRow(hit: hit)
+                                NavigationLink(value: MainlandLineTarget(lineId: hit.lineID, title: hit.name, seq: nil)) {
+                                    MainlandLineRow(hit: hit)
                                 }
                             }
                         }
                     }
                 }
-                if !chelaileStops.isEmpty {
+                if !mainlandStops.isEmpty {
                     Section(L10n.t("search.section.stops")) {
-                        ForEach(chelaileStops) { hit in
-                            NavigationLink(value: CheLaileStopTarget(physicalStId: hit.physicalStId, namesakeStId: hit.namesakeStId, title: hit.name)) {
+                        ForEach(mainlandStops) { hit in
+                            NavigationLink(value: MainlandStopTarget(stopID: hit.stopID, namesakeStopID: hit.namesakeStopID, title: hit.name)) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(hit.name)
                                     if let subtitle = hit.subtitle {
@@ -210,7 +219,7 @@ struct SearchView: View {
         let query = query
         let filter = filter
 
-        if let provider = app.provider as? CheLaileProvider {
+        if let provider = app.mainlandProvider {
             searchTask = Task {
                 try? await Task.sleep(nanoseconds: 250_000_000)
                 guard !Task.isCancelled else { return }
@@ -219,11 +228,14 @@ struct SearchView: View {
                 do {
                     let results = try await provider.search(keyword: query)
                     guard !Task.isCancelled else { return }
-                    chelaileLines = results.lines
-                    chelaileStops = results.stops
+                    mainlandError = nil
+                    mainlandLines = results.lines
+                    mainlandStops = results.stops
                 } catch {
-                    chelaileLines = []
-                    chelaileStops = []
+                    guard !Task.isCancelled else { return }
+                    mainlandLines = []
+                    mainlandStops = []
+                    mainlandError = MainlandErrorPresentation.message(for: error)
                 }
             }
             return
@@ -243,26 +255,26 @@ struct SearchView: View {
     }
 }
 
-struct CheLaileLineRow: View {
-    let hit: CheLaileLineHit
+struct MainlandLineRow: View {
+    let hit: MainlandLineSummary
 
     var body: some View {
         HStack(spacing: 12) {
-            RouteBadge(route: hit.lineName, entry: nil, colorHex: CheLaileProvider.color(for: hit.lineName))
+            RouteBadge(route: hit.name, entry: nil, colorHex: MainlandProviderPalette.color(for: hit.name))
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(L10n.t("route.to")) \(hit.dest)")
+                Text("\(L10n.t("route.to")) \(hit.destination)")
                     .font(.body)
                     .fontWeight(.medium)
                     .lineLimit(1)
                 HStack(spacing: 4) {
-                    if hit.isSubway {
-                        Text(L10n.t("chelaile.metros"))
+                    if hit.mode == .metro {
+                        Text(L10n.t("mainland.metros"))
                             .font(.caption2)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)
                             .background(Color(uiColor: .secondarySystemBackground), in: Capsule())
                     }
-                    Text(hit.orig)
+                    Text(hit.origin)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)

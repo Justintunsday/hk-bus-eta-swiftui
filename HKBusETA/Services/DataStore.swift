@@ -53,7 +53,8 @@ final class DataStore {
     private(set) var stopRouteIndex: [String: [StopRouteRef]] = [:]
     private(set) var directStopCompanies: [String: Set<String>] = [:]
 
-    /// Entries synthesized at runtime by query-mode providers (车来了).
+    /// Entries synthesized at runtime by query-mode providers (for example
+    /// AMap base data or the legacy mainland fallback).
     private var syntheticEntries: [String: RouteEntry] = [:]
     private var syntheticStops: [String: StopEntry] = [:]
 
@@ -115,7 +116,7 @@ final class DataStore {
         isLoading = true
         defer { isLoading = false }
 
-        // Query-mode regions (车来了) have no static database to download.
+        // Query-mode regions have no static database to download.
         if provider.databaseURLs.isEmpty {
             db = .empty
             lastLoaded = Date()

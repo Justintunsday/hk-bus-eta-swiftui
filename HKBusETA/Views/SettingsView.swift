@@ -21,7 +21,19 @@ struct SettingsView: View {
                     }
                     LabeledContent(L10n.t("settings.region.current"), value: app.region.name)
                     if app.region.isQueryMode {
-                        Text(L10n.t("settings.region.chelaileNotice"))
+                        if let mainland = app.mainlandProvider {
+                            LabeledContent(
+                                L10n.t("settings.region.dataSource"),
+                                value: mainland.dataSource.localizedName
+                            )
+                        }
+                        Text(L10n.t("settings.region.mainlandNotice"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(L10n.t("settings.region.realtimeNotice"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(L10n.t("settings.region.amapKey"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
