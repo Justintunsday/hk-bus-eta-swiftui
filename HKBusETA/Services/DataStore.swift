@@ -43,6 +43,11 @@ final class DataStore {
     private(set) var lastLoaded: Date?
     var errorMessage: String?
 
+    /// Download progress in 0...1 (0 when unknown).
+    private(set) var downloadProgress: Double = 0
+    private(set) var downloadedBytes: Int64 = 0
+    private(set) var totalBytes: Int64 = 0
+
     private(set) var routeSearchItems: [RouteSearchItem] = []
     private(set) var stopSearchItems: [StopSearchItem] = []
     private(set) var stopRouteIndex: [String: [StopRouteRef]] = [:]
@@ -70,8 +75,33 @@ final class DataStore {
     private var cacheFileURL: URL { cacheDirectory.appendingPathComponent("routeFareList.min.json") }
     private var cacheMd5URL: URL { cacheDirectory.appendingPathComponent("routeFareList.md5") }
 
+    /// Pre-1.6 cache location (before caches were namespaced by region).
+    private var legacyCacheFileURL: URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return base.appendingPathComponent("HKBusETA", isDirectory: true).appendingPathComponent("routeFareList.min.json")
+    }
+
+    private var legacyCacheMd5URL: URL {
+        legacyCacheFileURL.deletingLastPathComponent().appendingPathComponent("routeFareList.md5")
+    }
+
     private func ensureCacheDirectory() {
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+    }
+
+    /// Moves a pre-1.6 cache into the per-region directory so existing users
+    /// don't re-download the full database after upgrading.
+    private func migrateLegacyCacheIfNeeded() {
+        guard provider.id == "hk" else { return }
+        let fileManager = FileManager.default
+        guard !fileManager.fileExists(atPath: cacheFileURL.path),
+              fileManager.fileExists(atPath: legacyCacheFileURL.path) else { return }
+        ensureCacheDirectory()
+        try? fileManager.copyItem(at: legacyCacheFileURL, to: cacheFileURL)
+        if fileManager.fileExists(atPath: legacyCacheMd5URL.path),
+           !fileManager.fileExists(atPath: cacheMd5URL.path) {
+            try? fileManager.copyItem(at: legacyCacheMd5URL, to: cacheMd5URL)
+        }
     }
 
     // MARK: - Loading
@@ -80,6 +110,8 @@ final class DataStore {
         guard db == nil, !isLoading else { return }
         isLoading = true
         defer { isLoading = false }
+
+        migrateLegacyCacheIfNeeded()
 
         if let data = try? Data(contentsOf: cacheFileURL),
            let loaded = await Self.parse(data: data) {
@@ -91,11 +123,15 @@ final class DataStore {
 
     func refreshIfNeeded() async {
         ensureCacheDirectory()
+        migrateLegacyCacheIfNeeded()
         isDownloading = true
         statusText = L10n.t("status.checkingUpdate")
         defer {
             isDownloading = false
             statusText = ""
+            downloadProgress = 0
+            downloadedBytes = 0
+            totalBytes = 0
         }
 
         let remoteMd5 = await fetchText(md5: true)
@@ -133,11 +169,36 @@ final class DataStore {
 
     private func fetchData() async -> Data? {
         for url in provider.databaseURLs {
-            if let data = try? await session.data(from: url).0, !data.isEmpty {
+            if let data = try? await downloadWithProgress(from: url), !data.isEmpty {
                 return data
             }
         }
         return nil
+    }
+
+    /// Downloads with byte-level progress so the UI can show a percentage.
+    private func downloadWithProgress(from url: URL) async throws -> Data {
+        let delegate = DownloadProgressDelegate { [weak self] written, total in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.downloadedBytes = written
+                self.totalBytes = total
+                if total > 0 {
+                    self.downloadProgress = min(Double(written) / Double(total), 1)
+                }
+            }
+        }
+        let configuration = URLSessionConfiguration.default
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        configuration.timeoutIntervalForRequest = 60
+        let downloadSession = URLSession(configuration: configuration, delegate: delegate, delegateQueue: nil)
+        defer { downloadSession.finishTasksAndInvalidate() }
+
+        let (fileURL, response) = try await downloadSession.download(from: url)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            throw URLError(.badServerResponse)
+        }
+        return try Data(contentsOf: fileURL)
     }
 
     private func fetchText(md5: Bool) async -> String? {
@@ -355,4 +416,37 @@ private struct LoadedData: Sendable {
     let stopItems: [StopSearchItem]
     let stopRouteIndex: [String: [StopRouteRef]]
     let directStopCompanies: [String: Set<String>]
+}
+
+/// Reports throttled download progress (at most ~4 updates per second).
+private final class DownloadProgressDelegate: NSObject, URLSessionDownloadDelegate {
+    private let onProgress: (Int64, Int64) -> Void
+    private var lastBytes: Int64 = 0
+    private var lastReport = Date.distantPast
+
+    init(onProgress: @escaping (Int64, Int64) -> Void) {
+        self.onProgress = onProgress
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        downloadTask: URLSessionDownloadTask,
+        didWriteData bytesWritten: Int64,
+        totalBytesWritten: Int64,
+        totalBytesExpectedToWrite: Int64
+    ) {
+        let now = Date()
+        let finished = totalBytesExpectedToWrite > 0 && totalBytesWritten >= totalBytesExpectedToWrite
+        guard totalBytesWritten - lastBytes > 256 * 1024
+            || now.timeIntervalSince(lastReport) > 0.25
+            || finished
+        else { return }
+        lastBytes = totalBytesWritten
+        lastReport = now
+        onProgress(totalBytesWritten, totalBytesExpectedToWrite)
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        // Handled by the async `download(from:)` API.
+    }
 }

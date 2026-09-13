@@ -463,6 +463,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在下载路线数据…" } }
       }
     },
+    "status.firstLaunchHint" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The route database (~8 MB) is downloaded once on first launch, then served from the local cache." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "首次啟動需下載路線資料（約 8 MB），之後會使用本機快取。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "首次启动需下载路线数据（约 8 MB），之后会使用本地缓存。" } }
+      }
+    },
     "status.loading" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading..." } },

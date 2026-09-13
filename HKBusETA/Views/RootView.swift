@@ -26,16 +26,39 @@ struct DataGate<Content: View>: View {
     @Environment(AppState.self) private var app
     @ViewBuilder let content: () -> Content
 
+    private var byteText: String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return "\(formatter.string(fromByteCount: app.data.downloadedBytes)) / \(formatter.string(fromByteCount: app.data.totalBytes))"
+    }
+
     var body: some View {
         if app.data.db != nil {
             content()
         } else if app.data.isDownloading || app.data.isLoading {
             VStack(spacing: DesignTokens.Spacing.m) {
-                ProgressView()
-                    .tint(DesignTokens.accent)
+                if app.data.totalBytes > 0 {
+                    ProgressView(value: app.data.downloadProgress)
+                        .progressViewStyle(.linear)
+                        .frame(maxWidth: 240)
+                    Text("\(Int(app.data.downloadProgress * 100))% · \(byteText)")
+                        .font(.footnote)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                } else {
+                    ProgressView()
+                        .tint(DesignTokens.accent)
+                }
                 Text(app.data.statusText.isEmpty ? L10n.t("status.loading") : app.data.statusText)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                if app.data.db == nil {
+                    Text(L10n.t("status.firstLaunchHint"))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, DesignTokens.Spacing.xl)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
