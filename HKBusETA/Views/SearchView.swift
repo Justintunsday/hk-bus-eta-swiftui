@@ -7,6 +7,9 @@ struct SearchView: View {
     @State private var filter: TransportFilter = .all
     @State private var routeKeys: [String] = []
     @State private var stops: [StopSearchItem] = []
+    @State private var chelaileLines: [CheLaileLineHit] = []
+    @State private var chelaileStops: [CheLaileStopHit] = []
+    @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
 
     private var language: AppLanguage { L10n.language }
@@ -26,6 +29,12 @@ struct SearchView: View {
             .navigationDestination(for: StopTarget.self) { target in
                 StopEtaView(stopId: target.stopId)
             }
+            .navigationDestination(for: CheLaileLineTarget.self) { target in
+                CheLaileLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
+            }
+            .navigationDestination(for: CheLaileStopTarget.self) { target in
+                CheLaileStopBoardView(physicalStId: target.physicalStId, namesakeStId: target.namesakeStId, title: target.title)
+            }
         }
         .searchable(text: $query, prompt: Text(L10n.t("search.placeholder")))
         .searchScopes($filter, activation: .onSearchPresentation) {
@@ -40,7 +49,9 @@ struct SearchView: View {
 
     @ViewBuilder
     private var content: some View {
-        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if app.region.isQueryMode {
+            chelaileContent
+        } else if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             recentContent
         } else if routeKeys.isEmpty && stops.isEmpty {
             ContentUnavailableView {
@@ -66,6 +77,54 @@ struct SearchView: View {
                         ForEach(stops, id: \.id) { item in
                             NavigationLink(value: StopTarget(stopId: item.id)) {
                                 StopRowView(item: item, distance: distanceText(item))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var chelaileContent: some View {
+        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            ContentUnavailableView {
+                Label(L10n.t("search.title"), systemImage: "bus")
+            } description: {
+                Text(L10n.t("search.empty.hint"))
+            }
+        } else if isSearching && chelaileLines.isEmpty && chelaileStops.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if chelaileLines.isEmpty && chelaileStops.isEmpty {
+            ContentUnavailableView {
+                Label(L10n.t("search.noResults"), systemImage: "magnifyingglass")
+            } description: {
+                Text(L10n.t("search.noResults.hint"))
+            }
+        } else {
+            List {
+                if !chelaileLines.isEmpty {
+                    Section(L10n.t("search.section.routes")) {
+                        ForEach(chelaileLines) { hit in
+                            NavigationLink(value: CheLaileLineTarget(lineId: hit.lineId, title: hit.lineName, seq: nil)) {
+                                CheLaileLineRow(hit: hit)
+                            }
+                        }
+                    }
+                }
+                if !chelaileStops.isEmpty {
+                    Section(L10n.t("search.section.stops")) {
+                        ForEach(chelaileStops) { hit in
+                            NavigationLink(value: CheLaileStopTarget(physicalStId: hit.physicalStId, namesakeStId: hit.namesakeStId, title: hit.name)) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(hit.name)
+                                    if let subtitle = hit.subtitle {
+                                        Text(subtitle)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
                             }
                         }
                     }
@@ -141,6 +200,26 @@ struct SearchView: View {
         searchTask?.cancel()
         let query = query
         let filter = filter
+
+        if let provider = app.provider as? CheLaileProvider {
+            searchTask = Task {
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                guard !Task.isCancelled else { return }
+                isSearching = true
+                defer { isSearching = false }
+                do {
+                    let results = try await provider.search(keyword: query)
+                    guard !Task.isCancelled else { return }
+                    chelaileLines = results.lines
+                    chelaileStops = results.stops
+                } catch {
+                    chelaileLines = []
+                    chelaileStops = []
+                }
+            }
+            return
+        }
+
         searchTask = Task {
             try? await Task.sleep(nanoseconds: 150_000_000)
             guard !Task.isCancelled else { return }
@@ -152,6 +231,27 @@ struct SearchView: View {
             routeKeys = results.map(\.key)
             stops = stopResults
         }
+    }
+}
+
+struct CheLaileLineRow: View {
+    let hit: CheLaileLineHit
+
+    var body: some View {
+        HStack(spacing: 12) {
+            RouteBadge(route: hit.lineName, entry: nil, colorHex: CheLaileProvider.color(for: hit.lineName))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(L10n.t("route.to")) \(hit.dest)")
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                Text(hit.orig)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
 

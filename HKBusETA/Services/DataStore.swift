@@ -53,6 +53,10 @@ final class DataStore {
     private(set) var stopRouteIndex: [String: [StopRouteRef]] = [:]
     private(set) var directStopCompanies: [String: Set<String>] = [:]
 
+    /// Entries synthesized at runtime by query-mode providers (车来了).
+    private var syntheticEntries: [String: RouteEntry] = [:]
+    private var syntheticStops: [String: StopEntry] = [:]
+
     let provider: any TransitProvider
 
     private let session: URLSession
@@ -111,6 +115,13 @@ final class DataStore {
         isLoading = true
         defer { isLoading = false }
 
+        // Query-mode regions (车来了) have no static database to download.
+        if provider.databaseURLs.isEmpty {
+            db = .empty
+            lastLoaded = Date()
+            return
+        }
+
         migrateLegacyCacheIfNeeded()
 
         if let data = try? Data(contentsOf: cacheFileURL),
@@ -122,6 +133,7 @@ final class DataStore {
     }
 
     func refreshIfNeeded() async {
+        guard !provider.databaseURLs.isEmpty else { return }
         ensureCacheDirectory()
         migrateLegacyCacheIfNeeded()
         isDownloading = true
@@ -280,9 +292,22 @@ final class DataStore {
 
     // MARK: - Queries
 
-    func entry(_ key: String) -> RouteEntry? { db?.routeList[key] }
+    /// Registers a runtime-synthesized entry (query-mode providers) so the
+    /// shared route / ETA screens can resolve it like a database entry.
+    func registerSynthetic(entry: RouteEntry, stops: [String: StopEntry]) {
+        syntheticEntries[entry.routeKey] = entry
+        for (key, value) in stops {
+            syntheticStops[key] = value
+        }
+    }
 
-    func stop(_ id: String) -> StopEntry? { db?.stopList[id] }
+    func entry(_ key: String) -> RouteEntry? {
+        syntheticEntries[key] ?? db?.routeList[key]
+    }
+
+    func stop(_ id: String) -> StopEntry? {
+        syntheticStops[id] ?? db?.stopList[id]
+    }
 
     func stopName(_ id: String, _ language: AppLanguage) -> String {
         stop(id)?.name.name(language) ?? id

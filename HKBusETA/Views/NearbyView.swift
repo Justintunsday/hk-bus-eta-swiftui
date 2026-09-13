@@ -5,6 +5,8 @@ import UIKit
 struct NearbyView: View {
     @Environment(AppState.self) private var app
     @State private var results: [NearbyStop] = []
+    @State private var chelaileStops: [CheLaileNearbyStop] = []
+    @State private var isLoadingChelaile = false
 
     private var language: AppLanguage { L10n.language }
 
@@ -20,9 +22,19 @@ struct NearbyView: View {
             .navigationDestination(for: RouteEtaTarget.self) { target in
                 RouteEtaView(routeKey: target.routeKey, seq: target.seq)
             }
+            .navigationDestination(for: CheLaileLineTarget.self) { target in
+                CheLaileLineLoaderView(lineId: target.lineId, title: target.title, seq: target.seq)
+            }
+            .navigationDestination(for: CheLaileStopTarget.self) { target in
+                CheLaileStopBoardView(physicalStId: target.physicalStId, namesakeStId: target.namesakeStId, title: target.title)
+            }
         }
         .task {
             app.location.startUpdating()
+            recompute()
+        }
+        .task(id: app.region.id) {
+            recompute()
         }
         .onChange(of: app.location.location) {
             recompute()
@@ -58,6 +70,8 @@ struct NearbyView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
+        } else if app.region.isQueryMode {
+            chelaileContent
         } else if app.location.location == nil || results.isEmpty {
             VStack(spacing: DesignTokens.Spacing.m) {
                 ProgressView()
@@ -91,8 +105,82 @@ struct NearbyView: View {
         }
     }
 
+    @ViewBuilder
+    private var chelaileContent: some View {
+        if app.location.location == nil || (isLoadingChelaile && chelaileStops.isEmpty) {
+            VStack(spacing: DesignTokens.Spacing.m) {
+                ProgressView()
+                    .tint(DesignTokens.accent)
+                Text(L10n.t("nearby.locating"))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if chelaileStops.isEmpty {
+            ContentUnavailableView {
+                Label(L10n.t("nearby.title"), systemImage: "mappin.slash")
+            } description: {
+                Text(L10n.t("nearby.locating"))
+            } actions: {
+                Button(L10n.t("common.retry")) {
+                    recompute()
+                }
+            }
+        } else {
+            List(chelaileStops) { stop in
+                NavigationLink(value: CheLaileStopTarget(
+                    physicalStId: stop.physicalStId,
+                    namesakeStId: stop.namesakeStId,
+                    title: stop.name
+                )) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(stop.name)
+                                .font(.body)
+                            if !stop.arrivals.isEmpty {
+                                Text(arrivalSummary(stop.arrivals))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                        }
+                        Spacer()
+                        if let distance = stop.distance {
+                            Text("\(distance) m")
+                                .font(.caption)
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .refreshable { recompute() }
+        }
+    }
+
+    private func arrivalSummary(_ arrivals: [CheLaileNearbyArrival]) -> String {
+        arrivals.map { arrival in
+            if let minutes = arrival.minutes {
+                return "\(arrival.lineName) \(minutes)\(L10n.t("unit.minutes"))"
+            }
+            return arrival.lineName
+        }
+        .joined(separator: " · ")
+    }
+
     private func recompute() {
         guard let location = app.location.location, app.data.db != nil else { return }
+
+        if let provider = app.provider as? CheLaileProvider {
+            isLoadingChelaile = chelaileStops.isEmpty
+            Task {
+                let stops = (try? await provider.nearby(lat: location.coordinate.latitude, lng: location.coordinate.longitude)) ?? []
+                chelaileStops = stops
+                isLoadingChelaile = false
+            }
+            return
+        }
+
         results = app.data.nearestStops(to: location, limit: 40)
     }
 }

@@ -421,6 +421,41 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通用" } }
       }
     },
+"chelaile.scheduled" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Scheduled" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "定時班次" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "定时班次" } }
+      }
+    },
+    "settings.region" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Region" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "地區" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "地区" } }
+      }
+    },
+    "settings.region.auto" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Auto (current location)" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "自動（跟隨定位）" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自动（跟随定位）" } }
+      }
+    },
+    "settings.region.chelaileNotice" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mainland regions use the unofficial 车来了 data source; data is for reference only." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "內地地區使用非官方「車來了」數據源，資料僅供參考。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内地地区使用非官方“车来了”数据源，数据仅供参考。" } }
+      }
+    },
+    "settings.region.current" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Current region" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "目前地區" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前地区" } }
+      }
+    },
     "settings.language" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },

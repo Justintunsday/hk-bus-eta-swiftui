@@ -15,7 +15,15 @@ struct RootView: View {
                 .tabItem { Label(L10n.t("tab.settings"), systemImage: "gearshape") }
         }
         .tint(DesignTokens.accent)
-        .id(app.settings.language)
+        .id("\(app.region.id)-\(app.settings.language.rawValue)")
+        .task {
+            app.location.startUpdating()
+            app.resolveAutoRegion(location: app.location.location)
+        }
+        .onChange(of: app.location.location) {
+            app.resolveAutoRegion(location: app.location.location)
+        }
+        .onChange(of: app.settings.selectedRegionID) { app.settings.persist() }
         .onChange(of: app.settings.language) { app.settings.persist() }
         .onChange(of: app.settings.etaFormat) { app.settings.persist() }
         .onChange(of: app.settings.annotateScheduled) { app.settings.persist() }

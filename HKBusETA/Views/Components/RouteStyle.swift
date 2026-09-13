@@ -25,8 +25,12 @@ struct RouteBadge: View {
     let route: String
     let entry: RouteEntry?
     var fontSize: CGFloat = 17
+    var colorHex: UInt32?
 
     private var info: RouteColorInfo {
+        if let colorHex {
+            return RouteColorInfo(background: Color(hex: colorHex), foreground: RouteStyle.textColor(for: colorHex))
+        }
         if let entry {
             return RouteStyle.info(for: entry, provider: app.provider)
         }

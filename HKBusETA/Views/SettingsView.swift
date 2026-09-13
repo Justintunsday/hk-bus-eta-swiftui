@@ -7,6 +7,26 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Picker(selection: Binding(
+                        get: { app.settings.selectedRegionID },
+                        set: { app.settings.selectedRegionID = $0; app.selectRegion($0) }
+                    )) {
+                        Text(L10n.t("settings.region.auto")).tag(RegionCatalog.autoID)
+                        ForEach(RegionCatalog.all) { region in
+                            Text(region.name).tag(region.id)
+                        }
+                    } label: {
+                        Text(L10n.t("settings.region"))
+                    }
+                    LabeledContent(L10n.t("settings.region.current"), value: app.region.name)
+                    if app.region.isQueryMode {
+                        Text(L10n.t("settings.region.chelaileNotice"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 Section(L10n.t("settings.general")) {
                     Picker(selection: Binding(
                         get: { app.settings.language },
