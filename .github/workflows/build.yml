@@ -43,9 +43,25 @@ jobs:
           done
           echo "=== DiagnosticReports ==="
           ls -la ~/Library/Logs/DiagnosticReports/ 2>/dev/null || true
-          for f in ~/Library/Logs/DiagnosticReports/*; do
+          for f in ~/Library/Logs/DiagnosticReports/*.ips; do
             echo "--- $f"
-            head -120 "$f" 2>/dev/null || true
+            python3 - "$f" <<'PY'
+import json, sys
+with open(sys.argv[1]) as fh:
+    parts = fh.read().split("\n", 1)
+meta = json.loads(parts[0])
+payload = json.loads(parts[1])
+print("process:", meta.get("app_name"), meta.get("bug_type"))
+print("exception:", payload.get("exception"))
+print("termination:", payload.get("termination"))
+faulting = payload.get("faultingThread", 0)
+threads = payload.get("threads", [])
+images = payload.get("usedImages", [])
+if 0 <= faulting < len(threads):
+    for fr in threads[faulting].get("frames", [])[:35]:
+        img = images[fr["imageIndex"]] if fr.get("imageIndex") is not None and fr["imageIndex"] < len(images) else {}
+        print("   ", img.get("name", "?"), fr.get("symbol", "?"), "+", fr.get("imageOffset"))
+PY
           done
           echo "=== xcresult console ==="
           xcrun xcresulttool get log --path "$RUNNER_TEMP/HKBusETA.xcresult" --type console 2>&1 | tail -300 || true
