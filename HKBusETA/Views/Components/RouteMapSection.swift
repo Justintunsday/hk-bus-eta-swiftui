@@ -42,9 +42,10 @@ struct RouteMapSection: View {
             }
             ForEach(points) { point in
                 if let coordinate = point.coordinate {
-                    Annotation("\(point.seq + 1). \(point.name(L10n.language))", coordinate: coordinate, anchor: .bottom) {
+                    Annotation("\(point.seq + 1). \(point.name(L10n.language))", coordinate: coordinate, anchor: .center) {
                         marker(point)
                     }
+                    .annotationTitles(.hidden)
                 }
             }
         }
@@ -68,7 +69,18 @@ struct RouteMapSection: View {
     @ViewBuilder
     private func marker(_ point: RouteStopPoint) -> some View {
         let isSelected = selectedSeq == point.seq
-        VStack(spacing: 3) {
+        // The circle is always centered on the stop coordinate; the callout
+        // floats above it without shifting the pin.
+        ZStack {
+            ZStack {
+                Circle().fill(isSelected ? DesignTokens.accent : lineColor)
+                Circle().stroke(.white, lineWidth: 1.5)
+                Text("\(point.seq + 1)")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(isSelected ? DesignTokens.onAccent : RouteStyle.info(for: entry).foreground)
+            }
+            .frame(width: isSelected ? 24 : 19, height: isSelected ? 24 : 19)
+
             if isSelected {
                 Text("\(point.seq + 1). \(point.name(L10n.language))")
                     .font(.caption2)
@@ -79,15 +91,8 @@ struct RouteMapSection: View {
                     .background(.regularMaterial, in: Capsule())
                     .overlay(Capsule().stroke(Color(uiColor: .separator), lineWidth: 0.5))
                     .fixedSize()
+                    .offset(y: -34)
             }
-            ZStack {
-                Circle().fill(isSelected ? DesignTokens.accent : lineColor)
-                Circle().stroke(.white, lineWidth: 1.5)
-                Text("\(point.seq + 1)")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(isSelected ? DesignTokens.onAccent : RouteStyle.info(for: entry).foreground)
-            }
-            .frame(width: isSelected ? 24 : 19, height: isSelected ? 24 : 19)
         }
         .onTapGesture {
             selectedSeq = isSelected ? nil : point.seq
