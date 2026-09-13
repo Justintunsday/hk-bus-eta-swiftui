@@ -47,6 +47,10 @@ open HKBusETA.xcodeproj
 .github/workflows/build.yml
 ```
 
+## 設計系統 Design System
+
+Warm Minimal 方向（參考 [swiftui-design-skill](https://github.com/Wholiver/swiftui-design-skill)）：暖珊瑚強調色 `#E85D3A`、暖色中性、SF Rounded 數字、8pt 間距網格。設計 token 在 `HKBusETA/Utilities/DesignTokens.swift`，完整規範見 [`docs/brand-spec.md`](docs/brand-spec.md)。
+
 ## 資料來源 Data Sources
 
 - 到站預報：來自 [資料一站通 DATA.GOV.HK](https://data.gov.hk) 及各營運商 API（九巴、城巴、嶼巴、綠色小巴、港鐵巴士、輕鐵、港鐵）
