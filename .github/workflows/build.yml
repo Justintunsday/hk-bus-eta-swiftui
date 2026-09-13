@@ -51,7 +51,7 @@ jobs:
           ls -lh HKBusETA-unsigned.ipa
 
       - name: Upload unsigned IPA
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: HKBusETA-unsigned-ipa
           path: ${{ runner.temp }}/HKBusETA-unsigned.ipa
