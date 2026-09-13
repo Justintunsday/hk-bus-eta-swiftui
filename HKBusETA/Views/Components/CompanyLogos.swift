@@ -7,8 +7,6 @@ struct CompanyLogos: View {
     let language: AppLanguage
     var height: CGFloat = 18
 
-    @Environment(\.colorScheme) private var colorScheme
-
     private static let assetMap: [String: String] = [
         "kmb": "company_kmb",
         "ctb": "company_ctb",
@@ -43,10 +41,5 @@ struct CompanyLogos: View {
             .resizable()
             .scaledToFit()
             .frame(height: height)
-            .padding(2)
-            .background(
-                colorScheme == .dark ? Color.white.opacity(0.92) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 4, style: .continuous)
-            )
     }
 }

@@ -3,17 +3,20 @@
     {
       "filename": "company_gmb@1x.png",
       "idiom": "universal",
-      "scale": "1x"
+      "scale": "1x",
+      "appearance": false
     },
     {
       "filename": "company_gmb@2x.png",
       "idiom": "universal",
-      "scale": "2x"
+      "scale": "2x",
+      "appearance": false
     },
     {
       "filename": "company_gmb@3x.png",
       "idiom": "universal",
-      "scale": "3x"
+      "scale": "3x",
+      "appearance": false
     }
   ],
   "info": {
