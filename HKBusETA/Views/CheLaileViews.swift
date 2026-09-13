@@ -61,6 +61,30 @@ struct CheLaileLineLoaderView: View {
     }
 }
 
+/// Lightweight info page for metro lines: the CheLaile bus API carries the
+/// line's origin/terminus but not its intermediate stops.
+struct CheLaileMetroInfoView: View {
+    let name: String
+    let origin: String
+    let destination: String
+
+    var body: some View {
+        List {
+            Section {
+                LabeledContent(L10n.t("chelaile.metroStart"), value: origin)
+                LabeledContent(L10n.t("chelaile.metroEnd"), value: destination)
+            }
+            Section {
+                Text(L10n.t("chelaile.metroNotice"))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle(name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 /// Stop departure board for 车来了 regions.
 struct CheLaileStopBoardView: View {
     @Environment(AppState.self) private var app

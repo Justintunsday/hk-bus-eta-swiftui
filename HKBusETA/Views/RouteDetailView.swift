@@ -74,9 +74,8 @@ struct RouteDetailView: View {
     }
 
     private func makePoints(_ entry: RouteEntry) -> [RouteStopPoint] {
-        let db = app.data.db
-        return entry.canonicalStops.enumerated().map { index, stopId in
-            let stop = db?.stopList[stopId]
+        entry.canonicalStops.enumerated().map { index, stopId in
+            let stop = app.data.stop(stopId)
             return RouteStopPoint(
                 seq: index,
                 stopId: stopId,

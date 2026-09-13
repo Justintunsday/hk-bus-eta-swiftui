@@ -25,3 +25,9 @@ struct CheLaileStopTarget: Hashable {
     let namesakeStId: String?
     let title: String
 }
+
+struct CheLaileMetroTarget: Hashable {
+    let name: String
+    let origin: String
+    let destination: String
+}

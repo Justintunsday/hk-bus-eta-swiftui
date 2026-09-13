@@ -421,6 +421,27 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通用" } }
       }
     },
+"chelaile.metroStart" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Origin" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "起點站" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "起点站" } }
+  }
+},
+"chelaile.metroEnd" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "Terminus" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "終點站" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "终点站" } }
+  }
+},
+"chelaile.metroNotice" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "This data source does not provide intermediate metro stops. Open a stop page to see the metro lines serving it." } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "此數據源不提供地鐵沿途站點；可在車站頁查看經過的地鐵線路。" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此数据源不提供地铁沿途站点；可在车站页查看经过的地铁线路。" } }
+  }
+},
 "chelaile.metros" : {
   "localizations" : {
     "en" : { "stringUnit" : { "state" : "translated", "value" : "Metro" } },

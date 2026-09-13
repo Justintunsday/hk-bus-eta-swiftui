@@ -95,14 +95,15 @@ struct CheLaileProvider: TransitProvider {
         var lines: [CheLaileLineHit] = []
         var stops: [CheLaileStopHit] = []
         for line in response.result?.lines ?? [] {
-            guard line.subwayV2 != 1, let lineId = line.lineId, !lineId.isEmpty else { continue }
+            guard let lineId = line.lineId, !lineId.isEmpty else { continue }
             lines.append(
                 CheLaileLineHit(
                     id: "\(lineId)-\(line.direction ?? 0)",
                     lineId: lineId,
                     lineName: line.name ?? line.lineNo ?? "",
                     orig: line.startSn ?? "",
-                    dest: line.endSn ?? ""
+                    dest: line.endSn ?? "",
+                    isSubway: line.subwayV2 == 1
                 )
             )
         }
@@ -265,6 +266,7 @@ struct CheLaileLineHit: Identifiable, Hashable, Sendable {
     let lineName: String
     let orig: String
     let dest: String
+    var isSubway: Bool = false
 }
 
 struct CheLaileStopHit: Identifiable, Hashable, Sendable {

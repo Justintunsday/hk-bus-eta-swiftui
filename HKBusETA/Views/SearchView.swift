@@ -35,6 +35,9 @@ struct SearchView: View {
             .navigationDestination(for: CheLaileStopTarget.self) { target in
                 CheLaileStopBoardView(physicalStId: target.physicalStId, namesakeStId: target.namesakeStId, title: target.title)
             }
+            .navigationDestination(for: CheLaileMetroTarget.self) { target in
+                CheLaileMetroInfoView(name: target.name, origin: target.origin, destination: target.destination)
+            }
         }
         .searchable(text: $query, prompt: Text(L10n.t("search.placeholder")))
         .searchScopes($filter, activation: .onSearchPresentation) {
@@ -107,8 +110,14 @@ struct SearchView: View {
                 if !chelaileLines.isEmpty {
                     Section(L10n.t("search.section.routes")) {
                         ForEach(chelaileLines) { hit in
-                            NavigationLink(value: CheLaileLineTarget(lineId: hit.lineId, title: hit.lineName, seq: nil)) {
-                                CheLaileLineRow(hit: hit)
+                            if hit.isSubway {
+                                NavigationLink(value: CheLaileMetroTarget(name: hit.lineName, origin: hit.orig, destination: hit.dest)) {
+                                    CheLaileLineRow(hit: hit)
+                                }
+                            } else {
+                                NavigationLink(value: CheLaileLineTarget(lineId: hit.lineId, title: hit.lineName, seq: nil)) {
+                                    CheLaileLineRow(hit: hit)
+                                }
                             }
                         }
                     }
@@ -245,10 +254,19 @@ struct CheLaileLineRow: View {
                     .font(.body)
                     .fontWeight(.medium)
                     .lineLimit(1)
-                Text(hit.orig)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    if hit.isSubway {
+                        Text(L10n.t("chelaile.metros"))
+                            .font(.caption2)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Color(uiColor: .secondarySystemBackground), in: Capsule())
+                    }
+                    Text(hit.orig)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
         }
         .padding(.vertical, 2)
