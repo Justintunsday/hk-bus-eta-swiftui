@@ -14,9 +14,6 @@ struct StopEtaView: View {
         DataGate {
             List {
                 Section {
-                    header
-                }
-                Section(L10n.t("stop.section.routes")) {
                     if isLoading && items.isEmpty {
                         HStack(spacing: 10) {
                             ProgressView()
@@ -33,6 +30,8 @@ struct StopEtaView: View {
                             }
                         }
                     }
+                } header: {
+                    Text(sectionTitle)
                 }
                 if let lastUpdated {
                     Section {
@@ -69,21 +68,10 @@ struct StopEtaView: View {
         }
     }
 
-    @ViewBuilder
-    private var header: some View {
-        if let stop = app.data.stop(stopId) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(language == .zh ? stop.name.zh : stop.name.en)
-                    .font(.headline)
-                let count = app.data.routesAtStop(stopId).count
-                if count > 0 {
-                    Text("\(count) \(L10n.t("unit.routes"))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.vertical, 2)
-        }
+    private var sectionTitle: String {
+        let count = app.data.routesAtStop(stopId).count
+        guard count > 0 else { return L10n.t("stop.section.routes") }
+        return "\(L10n.t("stop.section.routes")) · \(count) \(L10n.t("unit.routes"))"
     }
 
     @ViewBuilder
@@ -121,37 +109,37 @@ struct StopBoardRowView: View {
     let settings: AppSettings
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
             RouteBadge(route: item.entry.route, entry: item.entry)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(item.entry.dest.name(language))")
                     .font(.subheadline)
                     .lineLimit(1)
                 CompanyTags(co: item.entry.co, language: language)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
+            .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .trailing, spacing: 3) {
                 let upcoming = item.upcoming
                 if upcoming.isEmpty {
-                    Text(item.etas.first?.remark.name(language) ?? L10n.t("eta.noEta"))
+                    let remark = item.etas.first?.remark.name(language) ?? ""
+                    Text(remark.isEmpty ? L10n.t("eta.noEta") : remark)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.trailing)
                         .lineLimit(2)
                 } else {
                     ForEach(Array(upcoming.prefix(3).enumerated()), id: \.offset) { index, eta in
-                        ETALineView(
+                        ETACompactLineView(
                             eta: eta,
-                            language: language,
                             format: settings.etaFormat,
                             annotateScheduled: settings.annotateScheduled,
-                            highlight: index == 0,
-                            showCompany: false,
-                            showDestination: false
+                            highlight: index == 0
                         )
                     }
                 }
             }
+            .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.vertical, 2)
     }

@@ -21,6 +21,7 @@
 ## 技術架構 Architecture
 
 - SwiftUI + `@Observable`（iOS 17+）
+- **Liquid Glass**：以 Xcode 26 / iOS 26 SDK 編譯時，標準控件在 iOS 26+ 自動採用 Liquid Glass 設計；篩選標籤等自訂元件另有 `glassEffect` 實作（以編譯器版本門控，Xcode 16 亦可編譯）
 - Xcode 16 同步資料夾（`PBXFileSystemSynchronizedRootGroup`），新增檔案無需修改 `project.pbxproj`
 - 無第三方依賴
 - `HKBusETA/Models` — `EtaDB` Codable 資料模型
@@ -30,7 +31,7 @@
 
 ## 建置 Build
 
-需求：macOS + Xcode 16 或以上。
+需求：macOS + Xcode 26（iOS 26 SDK，支援 Liquid Glass；Xcode 16 亦可編譯，但沒有玻璃材質）。
 
 ```bash
 git clone https://github.com/Justintunsday/hk-bus-eta-swiftui.git
@@ -40,7 +41,7 @@ open HKBusETA.xcodeproj
 
 選擇 HKBusETA scheme，執行於 iOS 模擬器或裝置（iOS 17+）。
 
-本倉庫亦設有 GitHub Actions（`macos-15` runner），每次推送會自動以 `xcodebuild` 編譯模擬器版本及未簽署裝置封存檔：
+本倉庫亦設有 GitHub Actions（`macos-26` runner / Xcode 26.6），每次推送會自動以 `xcodebuild` 編譯模擬器版本、未簽署裝置封存檔及 IPA：
 
 ```
 .github/workflows/build.yml

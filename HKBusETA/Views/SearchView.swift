@@ -54,10 +54,7 @@ struct SearchView: View {
                             .font(.subheadline)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(
-                                filter == option ? Color.accentColor : Color(uiColor: .secondarySystemBackground),
-                                in: Capsule()
-                            )
+                            .glassCapsuleBackground(selected: filter == option)
                             .foregroundStyle(filter == option ? Color.black : Color.primary)
                     }
                     .buttonStyle(.plain)

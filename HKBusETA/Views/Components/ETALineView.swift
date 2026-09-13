@@ -30,6 +30,7 @@ struct ETALineView: View {
             Spacer(minLength: 4)
             timeContent
         }
+        .lineLimit(1)
     }
 
     @ViewBuilder
@@ -53,17 +54,21 @@ struct ETALineView: View {
                     .monospacedDigit()
                     .foregroundStyle(highlight ? Color.accentColor : .primary)
             case .diff:
-                HStack(spacing: 2) {
-                    Text(minutesText(minutes)).fontWeight(.semibold).monospacedDigit()
-                    Text(L10n.t("unit.minutes")).font(.caption2).foregroundStyle(.secondary)
+                if isArriving(minutes) {
+                    arrivingText
+                } else {
+                    minutesWithUnit(minutes)
                 }
-                .foregroundStyle(highlight ? Color.accentColor : .primary)
             case .mixed:
                 HStack(spacing: 8) {
-                    Text(HKTime.timeString(eta.eta)).foregroundStyle(.secondary).monospacedDigit()
-                    Text(minutesText(minutes)).fontWeight(.semibold).monospacedDigit()
-                        .foregroundStyle(highlight ? Color.accentColor : .primary)
-                    Text(L10n.t("unit.minutes")).font(.caption2).foregroundStyle(.secondary)
+                    Text(HKTime.timeString(eta.eta))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                    if isArriving(minutes) {
+                        arrivingText
+                    } else {
+                        minutesWithUnit(minutes)
+                    }
                 }
             }
         } else {
@@ -73,11 +78,79 @@ struct ETALineView: View {
         }
     }
 
-    private func minutesText(_ minutes: Int) -> String {
-        let threshold = (eta.co == "mtr" || eta.co == "lightRail") ? 2 : 1
-        if minutes < threshold {
-            return L10n.t("eta.arriving")
+    private var arrivingText: some View {
+        Text(L10n.t("eta.arriving"))
+            .fontWeight(.semibold)
+            .foregroundStyle(highlight ? Color.accentColor : .primary)
+    }
+
+    private func minutesWithUnit(_ minutes: Int) -> some View {
+        HStack(spacing: 2) {
+            Text("\(minutes)")
+                .fontWeight(.semibold)
+                .monospacedDigit()
+            Text(L10n.t("unit.minutes"))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
-        return "\(minutes)"
+        .foregroundStyle(highlight ? Color.accentColor : .primary)
+    }
+
+    private func isArriving(_ minutes: Int) -> Bool {
+        minutes < threshold
+    }
+
+    private var threshold: Int {
+        (eta.co == "mtr" || eta.co == "lightRail") ? 2 : 1
+    }
+}
+
+/// Single-line compact ETA used by the stop departure board.
+struct ETACompactLineView: View {
+    let eta: Eta
+    let format: EtaFormat
+    let annotateScheduled: Bool
+    var highlight: Bool = false
+
+    private var language: AppLanguage { L10n.language }
+    private var threshold: Int { (eta.co == "mtr" || eta.co == "lightRail") ? 2 : 1 }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if annotateScheduled && eta.isScheduled {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            if eta.date != nil, let minutes = eta.minutesUntil {
+                if format != .diff {
+                    Text(HKTime.timeString(eta.eta))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                if minutes < threshold {
+                    Text(L10n.t("eta.arriving"))
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(highlight ? Color.accentColor : .primary)
+                } else {
+                    Text("\(minutes)")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .monospacedDigit()
+                        .foregroundStyle(highlight ? Color.accentColor : .primary)
+                    Text(L10n.t("unit.minutes"))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text(eta.remark.name(language).isEmpty ? L10n.t("eta.noEta") : eta.remark.name(language))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
