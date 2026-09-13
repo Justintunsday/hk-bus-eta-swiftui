@@ -78,8 +78,6 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(L10n.t("settings.title"))
-            .scrollContentBackground(.hidden)
-            .appBackground()
         }
     }
 

@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 struct FavoriteRoute: Codable, Identifiable, Hashable, Sendable {
-    var id: String { "\(routeKey)#\(seq)" }
+    var id: String { routeKey }
     let routeKey: String
     let route: String
     let serviceType: String
@@ -12,10 +12,6 @@ struct FavoriteRoute: Codable, Identifiable, Hashable, Sendable {
     let origEn: String
     let destZh: String
     let destEn: String
-    let stopId: String
-    let seq: Int
-    let stopNameZh: String
-    let stopNameEn: String
     let createdAt: Date
 }
 
@@ -74,12 +70,12 @@ final class BookmarkStore {
 
     // MARK: - Favorites
 
-    func isFavoriteRoute(routeKey: String, seq: Int) -> Bool {
-        favoriteRoutes.contains { $0.routeKey == routeKey && $0.seq == seq }
+    func isFavoriteRoute(_ routeKey: String) -> Bool {
+        favoriteRoutes.contains { $0.routeKey == routeKey }
     }
 
-    func toggleFavoriteRoute(entry: RouteEntry, routeKey: String, stopId: String, seq: Int, stopName: Terminal) {
-        if let index = favoriteRoutes.firstIndex(where: { $0.routeKey == routeKey && $0.seq == seq }) {
+    func toggleFavoriteRoute(entry: RouteEntry, routeKey: String) {
+        if let index = favoriteRoutes.firstIndex(where: { $0.routeKey == routeKey }) {
             favoriteRoutes.remove(at: index)
         } else {
             favoriteRoutes.insert(
@@ -92,10 +88,6 @@ final class BookmarkStore {
                     origEn: entry.orig.en,
                     destZh: entry.dest.zh,
                     destEn: entry.dest.en,
-                    stopId: stopId,
-                    seq: seq,
-                    stopNameZh: stopName.zh,
-                    stopNameEn: stopName.en,
                     createdAt: Date()
                 ),
                 at: 0

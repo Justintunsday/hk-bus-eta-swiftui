@@ -232,6 +232,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "找不到路线" } }
       }
     },
+    "route.reverse" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Opposite direction" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "切換方向" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换方向" } }
+      }
+    },
     "route.section.stops" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops" } },

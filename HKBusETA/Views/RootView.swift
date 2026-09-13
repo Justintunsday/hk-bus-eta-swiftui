@@ -34,11 +34,10 @@ struct DataGate<Content: View>: View {
                 ProgressView()
                     .tint(DesignTokens.accent)
                 Text(app.data.statusText.isEmpty ? L10n.t("status.loading") : app.data.statusText)
-                    .font(DesignTokens.caption)
-                    .foregroundStyle(DesignTokens.textSecondary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .appBackground()
         } else {
             ContentUnavailableView {
                 Label(L10n.t("error.noData.title"), systemImage: "wifi.exclamationmark")

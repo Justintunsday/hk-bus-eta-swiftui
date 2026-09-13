@@ -15,30 +15,30 @@ struct RouteEtaView: View {
     var body: some View {
         DataGate {
             if let entry = app.data.entry(routeKey) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.m) {
-                        headerCard(entry)
-                        etaSection(entry)
+                List {
+                    Section {
+                        header(entry)
+                    }
 
-                        if etas.isEmpty, !isLoading {
-                            scheduleFallback(entry)
-                        }
+                    etaSection(entry)
 
-                        if let lastUpdated {
+                    if etas.isEmpty, !isLoading {
+                        scheduleFallback(entry)
+                    }
+
+                    if let lastUpdated {
+                        Section {
                             HStack {
-                                Image(systemName: "arrow.triangle.2.circlepath")
-                                Text("\(L10n.t("eta.updatedAt")) \(HKTime.timeString(lastUpdated))")
+                                Text(L10n.t("eta.updatedAt"))
+                                Spacer()
+                                Text(HKTime.timeString(lastUpdated))
                                     .monospacedDigit()
                             }
-                            .font(DesignTokens.footnote)
-                            .foregroundStyle(DesignTokens.textTertiary)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.top, DesignTokens.Spacing.xs)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                         }
                     }
-                    .padding(DesignTokens.Spacing.m)
                 }
-                .appBackground()
                 .navigationTitle("\(entry.route) \(L10n.t("route.to")) \(entry.dest.name(language))")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -66,49 +66,49 @@ struct RouteEtaView: View {
 
     // MARK: - Header
 
-    private func headerCard(_ entry: RouteEntry) -> some View {
+    private func header(_ entry: RouteEntry) -> some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
-            HStack(spacing: DesignTokens.Spacing.s) {
+            HStack(spacing: 10) {
                 RouteBadge(route: entry.route, entry: entry, fontSize: 20)
                 CompanyTags(co: entry.co, language: language)
                 if entry.isSpecialTrip {
                     Text(L10n.t("route.special"))
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
             }
 
-            HStack(spacing: DesignTokens.Spacing.xs) {
+            HStack(spacing: 6) {
                 Text(entry.orig.name(language))
-                    .font(DesignTokens.caption)
-                    .foregroundStyle(DesignTokens.textSecondary)
                 Image(systemName: "arrow.right")
-                    .font(DesignTokens.footnote)
+                    .font(.caption2)
                     .foregroundStyle(DesignTokens.accent)
                 Text(entry.dest.name(language))
-                    .font(DesignTokens.bodyMedium)
+                    .fontWeight(.medium)
             }
-
-            Divider().overlay(DesignTokens.divider)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
 
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L10n.t("eta.currentStop"))
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                     Text(currentStopName(entry))
-                        .font(DesignTokens.subheading)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
                 }
                 Spacer()
                 if let fare = FareUtils.fare(entry, at: seq, db: app.data.db ?? .empty) {
                     Text("$\(fare)")
-                        .font(DesignTokens.tabular(17, weight: .semibold))
-                        .foregroundStyle(DesignTokens.textSecondary)
+                        .font(.subheadline)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
                 }
             }
         }
-        .surfaceCard()
+        .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
     // MARK: - ETA
@@ -116,20 +116,21 @@ struct RouteEtaView: View {
     @ViewBuilder
     private func etaSection(_ entry: RouteEntry) -> some View {
         if isLoading && etas.isEmpty {
-            HStack(spacing: DesignTokens.Spacing.s) {
-                ProgressView()
-                Text(L10n.t("status.loading"))
-                    .font(DesignTokens.body)
-                    .foregroundStyle(DesignTokens.textSecondary)
+            Section {
+                HStack(spacing: DesignTokens.Spacing.s) {
+                    ProgressView()
+                    Text(L10n.t("status.loading"))
+                        .foregroundStyle(.secondary)
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .surfaceCard()
         } else if let hero = etas.first(where: { $0.date != nil }) {
-            heroCard(hero)
+            Section {
+                heroRow(hero)
+            }
             let rest = etas.filter { $0.id != hero.id }
             if !rest.isEmpty {
-                VStack(spacing: 0) {
-                    ForEach(Array(rest.enumerated()), id: \.offset) { index, eta in
+                Section {
+                    ForEach(Array(rest.enumerated()), id: \.offset) { _, eta in
                         ETALineView(
                             eta: eta,
                             language: language,
@@ -139,16 +140,12 @@ struct RouteEtaView: View {
                             showCompany: entry.co.count > 1,
                             showDestination: true
                         )
-                        .padding(.vertical, DesignTokens.Spacing.s)
-                        if index < rest.count - 1 {
-                            Divider().overlay(DesignTokens.divider)
-                        }
+                        .padding(.vertical, 2)
                     }
                 }
-                .surfaceCard(padding: DesignTokens.Spacing.m)
             }
         } else if !etas.isEmpty {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
+            Section {
                 ForEach(Array(etas.enumerated()), id: \.offset) { _, eta in
                     ETALineView(
                         eta: eta,
@@ -157,24 +154,24 @@ struct RouteEtaView: View {
                         annotateScheduled: app.settings.annotateScheduled,
                         highlight: false
                     )
+                    .padding(.vertical, 2)
                 }
             }
-            .surfaceCard()
         } else {
-            Text(L10n.t("eta.noEta"))
-                .font(DesignTokens.body)
-                .foregroundStyle(DesignTokens.textSecondary)
-                .surfaceCard()
+            Section {
+                Text(L10n.t("eta.noEta"))
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
     /// Signature detail: oversized rounded countdown numeral.
-    private func heroCard(_ hero: Eta) -> some View {
+    private func heroRow(_ hero: Eta) -> some View {
         let minutes = hero.minutesUntil ?? 0
         let threshold = (hero.co == "mtr" || hero.co == "lightRail") ? 2 : 1
         let isArriving = minutes < threshold
 
-        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.s) {
                 if isArriving {
                     Text(L10n.t("eta.arriving"))
@@ -187,39 +184,41 @@ struct RouteEtaView: View {
                             .monospacedDigit()
                             .foregroundStyle(DesignTokens.accent)
                         Text(L10n.t("unit.minutes"))
-                            .font(DesignTokens.caption)
-                            .foregroundStyle(DesignTokens.textSecondary)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: DesignTokens.Spacing.xxs) {
+                VStack(alignment: .trailing, spacing: 2) {
                     Text(L10n.t("eta.arrivalTime"))
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                     Text(HKTime.timeString(hero.eta))
-                        .font(DesignTokens.tabular(18, weight: .semibold))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
                 }
             }
 
             HStack(spacing: DesignTokens.Spacing.s) {
                 if app.settings.annotateScheduled && hero.isScheduled {
                     Label(L10n.t("eta.scheduled"), systemImage: "calendar.badge.clock")
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
                 if !hero.remark.name(language).isEmpty, !hero.isScheduled {
                     Text(hero.remark.name(language))
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
                 if hero.co == "mtr", !hero.dest.name(language).isEmpty {
                     Text(hero.dest.name(language))
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
-        .surfaceCard()
+        .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
     // MARK: - Fallbacks
@@ -228,20 +227,20 @@ struct RouteEtaView: View {
     private func scheduleFallback(_ entry: RouteEntry) -> some View {
         let db = app.data.db ?? .empty
         if let headway = ServiceHours.currentHeadway(entry, db: db) {
-            Label("\(L10n.t("route.every")) \(max(headway / 60, 1)) \(L10n.t("unit.minutes"))", systemImage: "timer")
-                .font(DesignTokens.body)
-                .foregroundStyle(DesignTokens.textSecondary)
-                .surfaceCard()
+            Section {
+                Label("\(L10n.t("route.every")) \(max(headway / 60, 1)) \(L10n.t("unit.minutes"))", systemImage: "timer")
+                    .foregroundStyle(.secondary)
+            }
         } else if let hours = ServiceHours.hoursToday(entry, db: db) {
-            Label(hours, systemImage: "clock")
-                .font(DesignTokens.body)
-                .foregroundStyle(DesignTokens.textSecondary)
-                .surfaceCard()
+            Section {
+                Label(hours, systemImage: "clock")
+                    .foregroundStyle(.secondary)
+            }
         } else if entry.freq != nil {
-            Text(L10n.t("eta.noServiceToday"))
-                .font(DesignTokens.body)
-                .foregroundStyle(DesignTokens.textSecondary)
-                .surfaceCard()
+            Section {
+                Text(L10n.t("eta.noServiceToday"))
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -251,11 +250,9 @@ struct RouteEtaView: View {
     }
 
     private func favoriteButton(_ entry: RouteEntry) -> some View {
-        let isFavorite = app.bookmarks.isFavoriteRoute(routeKey: routeKey, seq: seq)
+        let isFavorite = app.bookmarks.isFavoriteRoute(routeKey)
         return Button {
-            let stops = entry.canonicalStops
-            guard seq >= 0, seq < stops.count, let stop = app.data.stop(stops[seq]) else { return }
-            app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: routeKey, stopId: stops[seq], seq: seq, stopName: stop.name)
+            app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: routeKey)
         } label: {
             Image(systemName: isFavorite ? "star.fill" : "star")
         }

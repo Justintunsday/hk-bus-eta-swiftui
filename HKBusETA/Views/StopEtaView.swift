@@ -17,29 +17,21 @@ struct StopEtaView: View {
                     if isLoading && items.isEmpty {
                         HStack(spacing: DesignTokens.Spacing.s) {
                             ProgressView()
-                                .tint(DesignTokens.accent)
                             Text(L10n.t("status.loading"))
-                                .font(DesignTokens.body)
-                                .foregroundStyle(DesignTokens.textSecondary)
+                                .foregroundStyle(.secondary)
                         }
-                        .padding(.vertical, DesignTokens.Spacing.xs)
                     } else if items.isEmpty {
                         Text(L10n.t("stop.noRoutes"))
-                            .font(DesignTokens.body)
-                            .foregroundStyle(DesignTokens.textSecondary)
+                            .foregroundStyle(.secondary)
                     } else {
                         ForEach(items) { item in
                             NavigationLink(value: RouteEtaTarget(routeKey: item.routeKey, seq: item.seq)) {
                                 StopBoardRowView(item: item, language: language, settings: app.settings)
                             }
-                            .listRowBackground(DesignTokens.surface)
                         }
                     }
                 } header: {
                     Text(sectionTitle)
-                        .font(DesignTokens.caption)
-                        .foregroundStyle(DesignTokens.textTertiary)
-                        .textCase(nil)
                 }
                 if let lastUpdated {
                     Section {
@@ -49,14 +41,11 @@ struct StopEtaView: View {
                             Text(HKTime.timeString(lastUpdated))
                                 .monospacedDigit()
                         }
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
-                        .listRowBackground(Color.clear)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                 }
             }
-            .scrollContentBackground(.hidden)
-            .appBackground()
             .navigationTitle(app.data.stopName(stopId, language))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -124,7 +113,7 @@ struct StopBoardRowView: View {
             RouteBadge(route: item.entry.route, entry: item.entry)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(item.entry.dest.name(language))")
-                    .font(DesignTokens.bodyMedium)
+                    .font(.body)
                     .lineLimit(1)
                 CompanyTags(co: item.entry.co, language: language)
                     .lineLimit(1)
@@ -135,8 +124,8 @@ struct StopBoardRowView: View {
                 if upcoming.isEmpty {
                     let remark = item.etas.first?.remark.name(language) ?? ""
                     Text(remark.isEmpty ? L10n.t("eta.noEta") : remark)
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.trailing)
                         .lineLimit(2)
                 } else {

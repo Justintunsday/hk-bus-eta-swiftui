@@ -63,36 +63,31 @@ struct NearbyView: View {
                 ProgressView()
                     .tint(DesignTokens.accent)
                 Text(L10n.t("nearby.locating"))
-                    .font(DesignTokens.caption)
-                    .foregroundStyle(DesignTokens.textSecondary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .appBackground()
         } else {
             List(results) { entry in
                 NavigationLink(value: StopTarget(stopId: entry.item.id)) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(language.isChinese ? L10n.display(entry.item.nameZh) : entry.item.nameEn)
-                                .font(DesignTokens.bodyMedium)
                             let count = app.data.routeCount(at: entry.item.id)
                             if count > 0 {
                                 Text("\(count) \(L10n.t("unit.routes"))")
-                                    .font(DesignTokens.footnote)
-                                    .foregroundStyle(DesignTokens.textTertiary)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                         Spacer()
                         Text(GeoUtils.distanceString(entry.distance, language: language))
-                            .font(DesignTokens.caption)
+                            .font(.caption)
                             .monospacedDigit()
-                            .foregroundStyle(DesignTokens.textSecondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .listRowBackground(DesignTokens.surface)
             }
-            .scrollContentBackground(.hidden)
-            .appBackground()
         }
     }
 

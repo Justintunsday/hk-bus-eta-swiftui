@@ -329,6 +329,26 @@ final class DataStore {
     func routeCount(at stopId: String) -> Int {
         routesAtStop(stopId).count
     }
+
+    /// The route entry running the opposite direction, if one exists.
+    func oppositeEntry(for entry: RouteEntry) -> (key: String, entry: RouteEntry)? {
+        guard let db else { return nil }
+        guard entry.orig.en != entry.dest.en else { return nil }
+        var fallback: (key: String, entry: RouteEntry)?
+        for (key, candidate) in db.routeList {
+            guard key != entry.routeKey else { continue }
+            guard candidate.route == entry.route else { continue }
+            guard !Set(candidate.co).isDisjoint(with: Set(entry.co)) else { continue }
+            guard candidate.orig.en == entry.dest.en, candidate.dest.en == entry.orig.en else { continue }
+            if candidate.serviceTypeValue == entry.serviceTypeValue {
+                return (key, candidate)
+            }
+            if fallback == nil {
+                fallback = (key, candidate)
+            }
+        }
+        return fallback
+    }
 }
 
 private struct LoadedData: Sendable {

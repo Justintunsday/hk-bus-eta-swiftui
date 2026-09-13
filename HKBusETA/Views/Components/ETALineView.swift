@@ -14,17 +14,17 @@ struct ETALineView: View {
             if showCompany, let company = eta.company {
                 Text(company.name(language))
                     .font(DesignTokens.footnote)
-                    .foregroundStyle(DesignTokens.textTertiary)
+                    .foregroundStyle(.tertiary)
             }
             if annotateScheduled && eta.isScheduled {
                 Image(systemName: "calendar.badge.clock")
                     .font(DesignTokens.footnote)
-                    .foregroundStyle(DesignTokens.textTertiary)
+                    .foregroundStyle(.tertiary)
             }
             if showDestination, eta.co == "mtr", !eta.dest.name(language).isEmpty {
                 Text(eta.dest.name(language))
                     .font(DesignTokens.caption)
-                    .foregroundStyle(DesignTokens.textSecondary)
+                    .foregroundStyle(.secondary)
             }
             remarkText
             Spacer(minLength: DesignTokens.Spacing.xs)
@@ -39,7 +39,7 @@ struct ETALineView: View {
         if !remark.isEmpty, !eta.isScheduled {
             Text(remark)
                 .font(DesignTokens.footnote)
-                .foregroundStyle(DesignTokens.textTertiary)
+                .foregroundStyle(.tertiary)
                 .lineLimit(1)
         }
     }
@@ -51,7 +51,7 @@ struct ETALineView: View {
             case .exact:
                 Text(HKTime.timeString(eta.eta))
                     .font(DesignTokens.tabular(17, weight: highlight ? .bold : .medium))
-                    .foregroundStyle(highlight ? DesignTokens.accent : DesignTokens.textPrimary)
+                    .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
             case .diff:
                 if isArriving(minutes) {
                     arrivingText
@@ -62,7 +62,7 @@ struct ETALineView: View {
                 HStack(spacing: DesignTokens.Spacing.s) {
                     Text(HKTime.timeString(eta.eta))
                         .font(DesignTokens.tabular(14, weight: .regular))
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .foregroundStyle(.tertiary)
                     if isArriving(minutes) {
                         arrivingText
                     } else {
@@ -73,7 +73,7 @@ struct ETALineView: View {
         } else {
             Text(eta.remark.name(language))
                 .font(DesignTokens.caption)
-                .foregroundStyle(DesignTokens.textSecondary)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -81,7 +81,7 @@ struct ETALineView: View {
         Text(L10n.t("eta.arriving"))
             .font(DesignTokens.subheading)
             .fontWeight(.semibold)
-            .foregroundStyle(highlight ? DesignTokens.accent : DesignTokens.textPrimary)
+            .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
     }
 
     private func minutesWithUnit(_ minutes: Int) -> some View {
@@ -90,9 +90,9 @@ struct ETALineView: View {
                 .font(DesignTokens.tabular(20, weight: .bold))
             Text(L10n.t("unit.minutes"))
                 .font(DesignTokens.footnote)
-                .foregroundStyle(DesignTokens.textTertiary)
+                .foregroundStyle(.tertiary)
         }
-        .foregroundStyle(highlight ? DesignTokens.accent : DesignTokens.textPrimary)
+        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
     }
 
     private func isArriving(_ minutes: Int) -> Bool {
@@ -119,31 +119,31 @@ struct ETACompactLineView: View {
             if annotateScheduled && eta.isScheduled {
                 Image(systemName: "calendar.badge.clock")
                     .font(DesignTokens.footnote)
-                    .foregroundStyle(DesignTokens.textTertiary)
+                    .foregroundStyle(.tertiary)
             }
             if eta.date != nil, let minutes = eta.minutesUntil {
                 if format != .diff {
                     Text(HKTime.timeString(eta.eta))
                         .font(DesignTokens.tabular(13, weight: .regular))
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .foregroundStyle(.tertiary)
                 }
                 if minutes < threshold {
                     Text(L10n.t("eta.arriving"))
                         .font(DesignTokens.caption)
                         .fontWeight(.semibold)
-                        .foregroundStyle(highlight ? DesignTokens.accent : DesignTokens.textPrimary)
+                        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
                 } else {
                     Text("\(minutes)")
                         .font(DesignTokens.tabular(18, weight: .bold))
-                        .foregroundStyle(highlight ? DesignTokens.accent : DesignTokens.textPrimary)
+                        .foregroundStyle(highlight ? DesignTokens.accent : Color.primary)
                     Text(L10n.t("unit.minutes"))
                         .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .foregroundStyle(.tertiary)
                 }
             } else {
                 Text(eta.remark.name(language).isEmpty ? L10n.t("eta.noEta") : eta.remark.name(language))
                     .font(DesignTokens.footnote)
-                    .foregroundStyle(DesignTokens.textTertiary)
+                    .foregroundStyle(.tertiary)
             }
         }
         .lineLimit(1)

@@ -113,37 +113,3 @@ extension UIColor {
         }
     }
 }
-
-// MARK: - Surfaces
-
-private struct SurfaceCardModifier: ViewModifier {
-    var padding: CGFloat = DesignTokens.Spacing.m
-    @Environment(\.colorScheme) private var colorScheme
-
-    func body(content: Content) -> some View {
-        content
-            .padding(padding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                DesignTokens.surface,
-                in: RoundedRectangle(cornerRadius: DesignTokens.Radius.l, style: .continuous)
-            )
-            .shadow(
-                color: .black.opacity(colorScheme == .dark ? 0.30 : 0.05),
-                radius: 8,
-                y: 2
-            )
-    }
-}
-
-extension View {
-    /// Warm Minimal surface card: soft rounded background with a subtle shadow.
-    func surfaceCard(padding: CGFloat = DesignTokens.Spacing.m) -> some View {
-        modifier(SurfaceCardModifier(padding: padding))
-    }
-
-    /// Screen background following the design system.
-    func appBackground() -> some View {
-        background(DesignTokens.background)
-    }
-}

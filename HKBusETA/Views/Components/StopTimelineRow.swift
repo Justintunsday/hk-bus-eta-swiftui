@@ -35,13 +35,13 @@ struct StopTimelineRow: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
                 HStack(spacing: DesignTokens.Spacing.s) {
                     Text("\(point.seq + 1). \(point.name(L10n.language))")
-                        .font(DesignTokens.body)
+                        .font(.body)
                         .fontWeight(isSelected ? .semibold : .regular)
                         .multilineTextAlignment(.leading)
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.down")
-                        .font(DesignTokens.footnote)
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
                 .contentShape(Rectangle())
@@ -78,22 +78,21 @@ struct StopEtaInlineView: View {
             if let fare = FareUtils.fare(entry, at: seq, db: app.data.db ?? .empty) {
                 HStack(spacing: DesignTokens.Spacing.xs) {
                     Text(L10n.t("route.fare"))
-                        .foregroundStyle(DesignTokens.textTertiary)
+                        .foregroundStyle(.secondary)
                     Text("$\(fare)")
                         .fontWeight(.medium)
                         .monospacedDigit()
                 }
-                .font(DesignTokens.caption)
+                .font(.caption)
             }
 
             if isLoading && etas.isEmpty {
                 ProgressView()
                     .controlSize(.small)
-                    .tint(DesignTokens.accent)
             } else if etas.isEmpty {
                 Text(L10n.t("eta.noEta"))
-                    .font(DesignTokens.caption)
-                    .foregroundStyle(DesignTokens.textSecondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             } else {
                 ForEach(Array(etas.prefix(3).enumerated()), id: \.offset) { index, eta in
                     ETALineView(
@@ -111,7 +110,7 @@ struct StopEtaInlineView: View {
             HStack(spacing: DesignTokens.Spacing.m) {
                 NavigationLink(value: RouteEtaTarget(routeKey: entry.routeKey, seq: seq)) {
                     Label(L10n.t("route.fullEta"), systemImage: "clock.arrow.circlepath")
-                        .font(DesignTokens.caption)
+                        .font(.caption)
                 }
                 .tint(DesignTokens.accent)
 
@@ -134,7 +133,7 @@ struct StopEtaInlineView: View {
         .padding(DesignTokens.Spacing.s + DesignTokens.Spacing.xs)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            DesignTokens.surfaceMuted,
+            Color(uiColor: .secondarySystemBackground),
             in: RoundedRectangle(cornerRadius: DesignTokens.Radius.m, style: .continuous)
         )
         .task(id: "\(entry.routeKey)#\(seq)") {
