@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 (build 4)
+
+- Fixed the legacy mainland compatibility client incorrectly treating
+  CheLaile's current `"00"` success status as an upstream service error.
+- Added an offline envelope regression test covering current and historical
+  success codes while continuing to reject genuine upstream failures.
+
 ## 1.1.1 (build 3)
 
 - Isolated favorites and recent history by transit region so routes and stops

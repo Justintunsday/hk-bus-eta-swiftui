@@ -142,7 +142,9 @@ struct CheLaileClient: Sendable {
 
     /// Finds the JSON envelope, unwraps `jsonr.data` and AES-decrypts
     /// `encryptResult` when present.
-    private static func decodeEnvelope(_ body: String) throws -> Data {
+    /// Internal so the exact H5 envelope contract can be regression-tested
+    /// offline without making a request to the legacy service.
+    static func decodeEnvelope(_ body: String) throws -> Data {
         guard let start = body.firstIndex(of: "{") else { throw CheLaileError.invalidResponse }
 
         var depth = 0
@@ -208,9 +210,12 @@ struct CheLaileClient: Sendable {
             } else {
                 continue
             }
-            let normalized = text.lowercased()
-            let successValues = ["0", "200", "ok", "success", "true"]
-            if !successValues.contains(normalized) {
+            let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let namedSuccessValues = ["200", "ok", "success", "true"]
+            // CheLaile's current H5 envelope uses "00" for success, while
+            // older responses used "0". Accept any all-zero numeric form.
+            let isZeroCode = !normalized.isEmpty && normalized.allSatisfy { $0 == "0" }
+            if !isZeroCode && !namedSuccessValues.contains(normalized) {
                 throw CheLaileError.upstream(code: text, message: message)
             }
         }
