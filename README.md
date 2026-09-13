@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.1.0
+# Where My Bus Now (WMBN) · 1.1.1
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 
@@ -15,7 +15,7 @@ is not an official app.
   Shenzhen, Guangzhou, Shanghai, Beijing, Tianjin, Chongqing, Chengdu,
   Foshan, Qingdao, Shenyang, Nanjing and Xi'an
 - Every region has its own independent data; search, nearby, favorites and
-  history all follow the selected city
+  history are stored in separate region namespaces and follow the selected city
 - **Hong Kong**: realtime arrivals for KMB, Citybus, NLB, green minibus,
   MTR Bus, Light Rail, MTR and ferries; route details with fares, service
   hours and headways

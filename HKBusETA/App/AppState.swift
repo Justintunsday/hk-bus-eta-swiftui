@@ -27,7 +27,7 @@ final class AppState {
         self.region = region
         self.provider = provider
         data = DataStore(provider: provider)
-        bookmarks = BookmarkStore()
+        bookmarks = BookmarkStore(regionID: region.id)
         location = LocationService()
         RegionClock.timeZone = provider.timeZone
     }
@@ -60,6 +60,7 @@ final class AppState {
         self.region = region
         self.provider = provider
         RegionClock.timeZone = provider.timeZone
+        bookmarks.selectRegion(region.id)
         data = DataStore(provider: provider)
         Task { await data.load() }
     }

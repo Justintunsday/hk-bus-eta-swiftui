@@ -33,6 +33,17 @@ jobs:
             -o "$RUNNER_TEMP/mainland_self_test"
           "$RUNNER_TEMP/mainland_self_test"
 
+      - name: Bookmark region isolation self-test
+        run: |
+          xcrun swiftc -parse-as-library -O \
+            HKBusETA/Utilities/ChineseConverter.swift \
+            HKBusETA/Utilities/Localization.swift \
+            HKBusETA/Models/EtaDB.swift \
+            HKBusETA/Services/BookmarkStore.swift \
+            scripts/bookmark_region_self_test.swift \
+            -o "$RUNNER_TEMP/bookmark_region_self_test"
+          "$RUNNER_TEMP/bookmark_region_self_test"
+
       - name: Legacy CheLaile network smoke test (allowed to fail)
         continue-on-error: true
         run: |
