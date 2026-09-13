@@ -114,19 +114,14 @@ enum TransportFilter: String, CaseIterable, Identifiable, Sendable {
     }
 
     func title(_ language: AppLanguage) -> String {
-        switch (self, language) {
-        case (.all, .zh): return "全部"
-        case (.all, .en): return "All"
-        case (.bus, .zh): return "巴士"
-        case (.bus, .en): return "Bus"
-        case (.minibus, .zh): return "小巴"
-        case (.minibus, .en): return "Minibus"
-        case (.lightRail, .zh): return "輕鐵"
-        case (.lightRail, .en): return "Light Rail"
-        case (.mtr, .zh): return "港鐵"
-        case (.mtr, .en): return "MTR"
-        case (.ferry, .zh): return "渡輪"
-        case (.ferry, .en): return "Ferry"
+        let zh = language.resolved == .zh
+        switch self {
+        case .all: return zh ? "全部" : "All"
+        case .bus: return zh ? "巴士" : "Bus"
+        case .minibus: return zh ? "小巴" : "Minibus"
+        case .lightRail: return zh ? "輕鐵" : "Light Rail"
+        case .mtr: return zh ? "港鐵" : "MTR"
+        case .ferry: return zh ? "渡輪" : "Ferry"
         }
     }
 }
