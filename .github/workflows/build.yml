@@ -21,21 +21,34 @@ jobs:
 
       - name: Build for iOS Simulator
         run: |
-          for attempt in 1 2 3; do
-            echo "Simulator build attempt $attempt"
-            if xcodebuild \
+          xcodebuild() {
+            command xcodebuild \
               -project HKBusETA.xcodeproj \
               -scheme HKBusETA \
               -configuration Debug \
               -sdk iphonesimulator \
               -destination 'generic/platform=iOS Simulator' \
+              -resultBundlePath "$RUNNER_TEMP/HKBusETA.xcresult" \
               CODE_SIGNING_ALLOWED=NO \
-              build; then
+              "$@"
+          }
+          for attempt in 1 2 3; do
+            echo "Simulator build attempt $attempt"
+            rm -rf "$RUNNER_TEMP/HKBusETA.xcresult"
+            if xcodebuild build; then
               exit 0
             fi
             echo "Attempt $attempt failed (possible Xcode build-system crash), retrying..."
             sleep 10
           done
+          echo "=== DiagnosticReports ==="
+          ls -la ~/Library/Logs/DiagnosticReports/ 2>/dev/null || true
+          for f in ~/Library/Logs/DiagnosticReports/*; do
+            echo "--- $f"
+            head -120 "$f" 2>/dev/null || true
+          done
+          echo "=== xcresult console ==="
+          xcrun xcresulttool get log --path "$RUNNER_TEMP/HKBusETA.xcresult" --type console 2>&1 | tail -300 || true
           exit 1
 
       - name: Archive for iOS device (unsigned)
