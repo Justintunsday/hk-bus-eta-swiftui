@@ -49,7 +49,15 @@ struct StopEtaView: View {
             .navigationTitle(app.data.stopName(stopId, language))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    if let stop = app.data.stop(stopId), stop.location.isValid {
+                        StopNavigationButton(
+                            stopName: stop.name.name(language),
+                            location: stop.location
+                        ) {
+                            Image(systemName: "map")
+                        }
+                    }
                     favoriteButton
                 }
             }

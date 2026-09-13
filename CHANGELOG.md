@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0 (build 6)
+
+- Added station navigation from Hong Kong and mainland stop boards, route
+  stop expansion, and mainland stop targets.
+- WGS-84 stations open Apple Maps walking directions from the current
+  location; GCJ-02 stations use the official AMap iOS walking URI without
+  passing mainland coordinates to MapKit.
+- Added localized map/AMap installation failure messages and offline coverage
+  for navigation strategy selection and URI encoding.
+
 ## 1.2.0 (build 5)
 
 - Mainland metro search results now load standard route details through the

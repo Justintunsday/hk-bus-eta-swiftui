@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.2.0
+# Where My Bus Now (WMBN) · 1.3.0
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 
@@ -23,7 +23,8 @@ is not an official app.
   configured; nearby, stop boards and realtime ETAs use replaceable provider
   capabilities with the legacy CheLaile compatibility fallback retained
 - Route detail: MapKit map (polyline, numbered stop pins, tap to sync),
-  timeline of stops, tap a stop to expand inline arrivals
+  timeline of stops, tap a stop to expand inline arrivals, and navigate to
+  any stop with a valid coordinate
 - Stop departure boards with aligned tabular ETA columns
 - Nearby stops with distance, favorites for whole routes and stops, recents
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
@@ -90,6 +91,9 @@ builds the simulator app, an unsigned device archive and an IPA on every push.
   `Info.plist` build setting or the process environment; no key is stored in
   source code. AMap data is GCJ-02 and remains explicitly tagged at the
   MapKit boundary.
+- Station navigation: WGS-84 coordinates open Apple Maps walking directions
+  from the current location. GCJ-02 coordinates open the official AMap iOS
+  URI with the localized station name; they are never sent to MapKit.
 - Mainland realtime ETA: AMap does not provide it through these bus endpoints.
   Supply an authorized implementation of `MainlandRealtimeProvider` when one
   is available. Until then, the unofficial CheLaile H5 API (see

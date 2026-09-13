@@ -44,7 +44,12 @@ struct SearchView: View {
                 )
             }
             .navigationDestination(for: MainlandStopTarget.self) { target in
-                MainlandStopBoardView(stopID: target.stopID, namesakeStopID: target.namesakeStopID, title: target.title)
+                MainlandStopBoardView(
+                    stopID: target.stopID,
+                    namesakeStopID: target.namesakeStopID,
+                    title: target.title,
+                    location: target.location
+                )
             }
         }
         .searchable(text: $query, prompt: Text(L10n.t("search.placeholder")))
@@ -145,7 +150,12 @@ struct SearchView: View {
                 if !mainlandStops.isEmpty {
                     Section(L10n.t("search.section.stops")) {
                         ForEach(mainlandStops) { hit in
-                            NavigationLink(value: MainlandStopTarget(stopID: hit.stopID, namesakeStopID: hit.namesakeStopID, title: hit.name)) {
+                            NavigationLink(value: MainlandStopTarget(
+                                stopID: hit.stopID,
+                                namesakeStopID: hit.namesakeStopID,
+                                title: hit.name,
+                                location: hit.location.map { StopLocation($0) }
+                            )) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(hit.name)
                                     if let subtitle = hit.subtitle {

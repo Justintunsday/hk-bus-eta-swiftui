@@ -34,6 +34,17 @@ jobs:
             -o "$RUNNER_TEMP/mainland_self_test"
           "$RUNNER_TEMP/mainland_self_test"
 
+      - name: Offline stop navigation self-test
+        run: |
+          xcrun swiftc -parse-as-library -O \
+            HKBusETA/Utilities/ChineseConverter.swift \
+            HKBusETA/Utilities/Localization.swift \
+            HKBusETA/Models/EtaDB.swift \
+            HKBusETA/Services/StopNavigationURLBuilder.swift \
+            scripts/stop_navigation_self_test.swift \
+            -o "$RUNNER_TEMP/stop_navigation_self_test"
+          "$RUNNER_TEMP/stop_navigation_self_test"
+
       - name: Bookmark region isolation self-test
         run: |
           xcrun swiftc -parse-as-library -O \

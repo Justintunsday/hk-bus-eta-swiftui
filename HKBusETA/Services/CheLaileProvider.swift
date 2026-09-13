@@ -178,7 +178,9 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
                 namesakeStopID: stop.namesakeStId,
                 name: stop.sn ?? "",
                 distanceMeters: stop.distance.map(Double.init),
-                location: nil,
+                location: stop.lat.flatMap { lat in
+                    stop.lng.flatMap { lng in MainlandCoordinate.wgs84(latitude: lat, longitude: lng) }
+                },
                 arrivals: Array(arrivals),
                 source: .legacyFallback
             )

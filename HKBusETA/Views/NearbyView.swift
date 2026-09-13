@@ -37,7 +37,12 @@ struct NearbyView: View {
                 )
             }
             .navigationDestination(for: MainlandStopTarget.self) { target in
-                MainlandStopBoardView(stopID: target.stopID, namesakeStopID: target.namesakeStopID, title: target.title)
+                MainlandStopBoardView(
+                    stopID: target.stopID,
+                    namesakeStopID: target.namesakeStopID,
+                    title: target.title,
+                    location: target.location
+                )
             }
         }
         .task {
@@ -150,7 +155,8 @@ struct NearbyView: View {
                 NavigationLink(value: MainlandStopTarget(
                     stopID: stop.stopID,
                     namesakeStopID: stop.namesakeStopID,
-                    title: stop.name
+                    title: stop.name,
+                    location: stop.location.map { StopLocation($0) }
                 )) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {

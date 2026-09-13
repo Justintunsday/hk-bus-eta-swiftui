@@ -52,4 +52,17 @@ struct MainlandStopTarget: Hashable {
     let stopID: String
     let namesakeStopID: String?
     let title: String
+    let location: StopLocation?
+
+    init(
+        stopID: String,
+        namesakeStopID: String? = nil,
+        title: String,
+        location: StopLocation? = nil
+    ) {
+        self.stopID = stopID
+        self.namesakeStopID = namesakeStopID
+        self.title = title
+        self.location = location
+    }
 }

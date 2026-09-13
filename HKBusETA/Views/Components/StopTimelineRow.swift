@@ -127,6 +127,18 @@ struct StopEtaInlineView: View {
                 }
 
                 if let stopId, let stop = app.data.stop(stopId) {
+                    if stop.location.isValid {
+                        StopNavigationButton(
+                            stopName: stop.name.name(language),
+                            location: stop.location
+                        ) {
+                            Label(L10n.t("navigation.navigate"), systemImage: "figure.walk")
+                                .font(DesignTokens.caption)
+                        }
+                        .buttonStyle(.plain)
+                        .tint(DesignTokens.accent)
+                    }
+
                     let isFavorite = app.bookmarks.isFavoriteStop(stopId)
                     Button {
                         app.bookmarks.toggleFavoriteStop(id: stopId, name: stop.name, location: stop.location)

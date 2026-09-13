@@ -42,6 +42,16 @@ struct MainlandCoordinate: Codable, Hashable, Sendable {
     }
 }
 
+extension StopLocation {
+    init(_ coordinate: MainlandCoordinate) {
+        self.init(
+            lat: coordinate.latitude,
+            lng: coordinate.longitude,
+            coordinateSystem: coordinate.system == .gcj02 ? .gcj02 : .wgs84
+        )
+    }
+}
+
 /// Mainland city identifiers used in official service requests.
 ///
 /// `adcode` and `citycode` are preferred over a display name.  AMap accepts

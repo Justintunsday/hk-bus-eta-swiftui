@@ -319,6 +319,8 @@ struct CheLaileNearbyResponse: Decodable {
     struct Stop: Decodable {
         let sId: String?
         let sn: String?
+        let lat: Double?
+        let lng: Double?
         let distance: Int?
         let physicalStId: String?
         let namesakeStId: String?

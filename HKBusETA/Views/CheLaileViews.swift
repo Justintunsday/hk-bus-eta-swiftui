@@ -193,11 +193,24 @@ struct MainlandStopBoardView: View {
     let stopID: String
     let namesakeStopID: String?
     let title: String
+    let location: StopLocation?
 
     @State private var rows: [MainlandBoardLine] = []
     @State private var otherLines: [MainlandTransitLine] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+
+    init(
+        stopID: String,
+        namesakeStopID: String? = nil,
+        title: String,
+        location: StopLocation? = nil
+    ) {
+        self.stopID = stopID
+        self.namesakeStopID = namesakeStopID
+        self.title = title
+        self.location = location
+    }
 
     var body: some View {
         Group {
@@ -264,6 +277,15 @@ struct MainlandStopBoardView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if let location, location.isValid {
+                    StopNavigationButton(stopName: L10n.display(title), location: location) {
+                        Image(systemName: "map")
+                    }
+                }
+            }
+        }
         .task(id: stopID) { await load() }
     }
 

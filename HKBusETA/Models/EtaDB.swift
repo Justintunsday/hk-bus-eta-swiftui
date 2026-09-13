@@ -76,6 +76,10 @@ struct StopLocation: Codable, Hashable, Sendable {
         self.coordinateSystem = coordinateSystem
     }
 
+    var isValid: Bool {
+        lat.isFinite && lng.isFinite && (-90...90).contains(lat) && (-180...180).contains(lng)
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         lat = try container.decode(Double.self, forKey: .lat)

@@ -8,6 +8,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "收藏" } }
       }
     },
+    "common.ok" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "確定" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "确定" } }
+      }
+    },
     "common.retry" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } },
@@ -20,6 +27,41 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Unfavorite" } },
         "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "取消收藏" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消收藏" } }
+      }
+    },
+    "navigation.amapUnavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unable to open AMap. Please install AMap and try again." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "無法開啟高德地圖，請先安裝高德地圖後再試。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开高德地图，请先安装高德地图后重试。" } }
+      }
+    },
+    "navigation.error.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Navigation unavailable" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "無法導航" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法导航" } }
+      }
+    },
+    "navigation.invalidLocation" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This station does not have a valid location." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "此車站沒有有效位置。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此车站没有有效位置。" } }
+      }
+    },
+    "navigation.navigate" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Navigate to station" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "導航到車站" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导航到车站" } }
+      }
+    },
+    "navigation.openMapFailed" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unable to open Apple Maps. Please try again." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "無法開啟 Apple 地圖，請稍後再試。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开 Apple 地图，请稍后重试。" } }
       }
     },
     "error.dataDownloadFailed" : {
