@@ -43,6 +43,7 @@ enum StopNavigationService {
             ]
             guard destination.openInMaps(launchOptions: options) else {
                 onFailure(.appleMapsUnavailable)
+                return
             }
 
         case .amapWalking:
