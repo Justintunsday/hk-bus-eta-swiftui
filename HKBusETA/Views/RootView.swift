@@ -14,6 +14,7 @@ struct RootView: View {
             SettingsView()
                 .tabItem { Label(L10n.t("tab.settings"), systemImage: "gearshape") }
         }
+        .tint(DesignTokens.accent)
         .id(app.settings.language)
         .onChange(of: app.settings.language) { app.settings.persist() }
         .onChange(of: app.settings.etaFormat) { app.settings.persist() }
@@ -29,13 +30,15 @@ struct DataGate<Content: View>: View {
         if app.data.db != nil {
             content()
         } else if app.data.isDownloading || app.data.isLoading {
-            VStack(spacing: 12) {
+            VStack(spacing: DesignTokens.Spacing.m) {
                 ProgressView()
+                    .tint(DesignTokens.accent)
                 Text(app.data.statusText.isEmpty ? L10n.t("status.loading") : app.data.statusText)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(DesignTokens.caption)
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .appBackground()
         } else {
             ContentUnavailableView {
                 Label(L10n.t("error.noData.title"), systemImage: "wifi.exclamationmark")

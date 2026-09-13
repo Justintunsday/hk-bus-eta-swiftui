@@ -50,6 +50,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未能加载路线数据" } }
       }
     },
+    "eta.arrivalTime" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Arrival" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "到達時間" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "到达时间" } }
+      }
+    },
     "eta.arriving" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Arriving" } },
@@ -76,6 +83,13 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "No service today" } },
         "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "今日沒有服務" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "今日没有服务" } }
+      }
+    },
+    "eta.scheduled" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Scheduled" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "預定班次" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "预定班次" } }
       }
     },
     "eta.section.schedule" : {

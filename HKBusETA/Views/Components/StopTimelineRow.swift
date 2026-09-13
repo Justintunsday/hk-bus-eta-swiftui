@@ -12,13 +12,13 @@ struct StopTimelineRow: View {
     private var lineColor: Color { RouteStyle.info(for: entry).background }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: DesignTokens.Spacing.s) {
             VStack(spacing: 0) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? lineColor : Color.clear)
+                        .fill(isSelected ? DesignTokens.accent : Color.clear)
                     Circle()
-                        .stroke(lineColor, lineWidth: isSelected ? 5 : 3)
+                        .stroke(isSelected ? DesignTokens.accent : lineColor, lineWidth: isSelected ? 5 : 3)
                 }
                 .frame(width: 17, height: 17)
                 .frame(width: 26, height: 26)
@@ -32,16 +32,16 @@ struct StopTimelineRow: View {
             }
             .frame(width: 26)
 
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
+                HStack(spacing: DesignTokens.Spacing.s) {
                     Text("\(point.seq + 1). \(point.name(L10n.language))")
-                        .font(.subheadline)
+                        .font(DesignTokens.body)
                         .fontWeight(isSelected ? .semibold : .regular)
                         .multilineTextAlignment(.leading)
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.down")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(DesignTokens.footnote)
+                        .foregroundStyle(DesignTokens.textTertiary)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
                 .contentShape(Rectangle())
@@ -52,7 +52,7 @@ struct StopTimelineRow: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
-            .padding(.bottom, isLast ? 0 : 14)
+            .padding(.bottom, isLast ? 0 : DesignTokens.Spacing.m)
         }
     }
 }
@@ -74,24 +74,26 @@ struct StopEtaInlineView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
             if let fare = FareUtils.fare(entry, at: seq, db: app.data.db ?? .empty) {
-                HStack(spacing: 4) {
+                HStack(spacing: DesignTokens.Spacing.xs) {
                     Text(L10n.t("route.fare"))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DesignTokens.textTertiary)
                     Text("$\(fare)")
                         .fontWeight(.medium)
+                        .monospacedDigit()
                 }
-                .font(.caption)
+                .font(DesignTokens.caption)
             }
 
             if isLoading && etas.isEmpty {
                 ProgressView()
                     .controlSize(.small)
+                    .tint(DesignTokens.accent)
             } else if etas.isEmpty {
                 Text(L10n.t("eta.noEta"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DesignTokens.caption)
+                    .foregroundStyle(DesignTokens.textSecondary)
             } else {
                 ForEach(Array(etas.prefix(3).enumerated()), id: \.offset) { index, eta in
                     ETALineView(
@@ -106,11 +108,12 @@ struct StopEtaInlineView: View {
                 }
             }
 
-            HStack(spacing: 16) {
+            HStack(spacing: DesignTokens.Spacing.m) {
                 NavigationLink(value: RouteEtaTarget(routeKey: entry.routeKey, seq: seq)) {
                     Label(L10n.t("route.fullEta"), systemImage: "clock.arrow.circlepath")
-                        .font(.caption)
+                        .font(DesignTokens.caption)
                 }
+                .tint(DesignTokens.accent)
 
                 if let stopId, let stop = app.data.stop(stopId) {
                     let isFavorite = app.bookmarks.isFavoriteStop(stopId)
@@ -121,16 +124,19 @@ struct StopEtaInlineView: View {
                             isFavorite ? L10n.t("common.unfavorite") : L10n.t("common.favorite"),
                             systemImage: isFavorite ? "star.fill" : "star"
                         )
-                        .font(.caption)
+                        .font(DesignTokens.caption)
                     }
                     .buttonStyle(.plain)
-                    .tint(.yellow)
+                    .tint(DesignTokens.accent)
                 }
             }
         }
-        .padding(10)
+        .padding(DesignTokens.Spacing.s + DesignTokens.Spacing.xs)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+        .background(
+            DesignTokens.surfaceMuted,
+            in: RoundedRectangle(cornerRadius: DesignTokens.Radius.m, style: .continuous)
+        )
         .task(id: "\(entry.routeKey)#\(seq)") {
             while !Task.isCancelled {
                 await refresh()

@@ -11,7 +11,7 @@ extension View {
         #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             if selected {
-                self.background(Color.accentColor, in: Capsule())
+                self.background(DesignTokens.accent, in: Capsule())
             } else {
                 self.glassEffect(.regular, in: Capsule())
             }
@@ -26,9 +26,9 @@ extension View {
     @ViewBuilder
     private func legacyCapsuleBackground(selected: Bool) -> some View {
         if selected {
-            self.background(Color.accentColor, in: Capsule())
+            self.background(DesignTokens.accent, in: Capsule())
         } else {
-            self.background(Color(uiColor: .secondarySystemBackground), in: Capsule())
+            self.background(DesignTokens.surfaceMuted, in: Capsule())
         }
     }
 }

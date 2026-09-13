@@ -81,11 +81,11 @@ struct RouteMapSection: View {
                     .fixedSize()
             }
             ZStack {
-                Circle().fill(isSelected ? Color.accentColor : lineColor)
+                Circle().fill(isSelected ? DesignTokens.accent : lineColor)
                 Circle().stroke(.white, lineWidth: 1.5)
                 Text("\(point.seq + 1)")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(isSelected ? Color.black : RouteStyle.info(for: entry).foreground)
+                    .foregroundStyle(isSelected ? DesignTokens.onAccent : RouteStyle.info(for: entry).foreground)
             }
             .frame(width: isSelected ? 24 : 19, height: isSelected ? 24 : 19)
         }

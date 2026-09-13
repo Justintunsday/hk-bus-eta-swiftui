@@ -15,23 +15,31 @@ struct StopEtaView: View {
             List {
                 Section {
                     if isLoading && items.isEmpty {
-                        HStack(spacing: 10) {
+                        HStack(spacing: DesignTokens.Spacing.s) {
                             ProgressView()
+                                .tint(DesignTokens.accent)
                             Text(L10n.t("status.loading"))
-                                .foregroundStyle(.secondary)
+                                .font(DesignTokens.body)
+                                .foregroundStyle(DesignTokens.textSecondary)
                         }
+                        .padding(.vertical, DesignTokens.Spacing.xs)
                     } else if items.isEmpty {
                         Text(L10n.t("stop.noRoutes"))
-                            .foregroundStyle(.secondary)
+                            .font(DesignTokens.body)
+                            .foregroundStyle(DesignTokens.textSecondary)
                     } else {
                         ForEach(items) { item in
                             NavigationLink(value: RouteEtaTarget(routeKey: item.routeKey, seq: item.seq)) {
                                 StopBoardRowView(item: item, language: language, settings: app.settings)
                             }
+                            .listRowBackground(DesignTokens.surface)
                         }
                     }
                 } header: {
                     Text(sectionTitle)
+                        .font(DesignTokens.caption)
+                        .foregroundStyle(DesignTokens.textTertiary)
+                        .textCase(nil)
                 }
                 if let lastUpdated {
                     Section {
@@ -41,11 +49,14 @@ struct StopEtaView: View {
                             Text(HKTime.timeString(lastUpdated))
                                 .monospacedDigit()
                         }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DesignTokens.footnote)
+                        .foregroundStyle(DesignTokens.textTertiary)
+                        .listRowBackground(Color.clear)
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .appBackground()
             .navigationTitle(app.data.stopName(stopId, language))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -83,7 +94,7 @@ struct StopEtaView: View {
             } label: {
                 Image(systemName: isFavorite ? "star.fill" : "star")
             }
-            .tint(.yellow)
+            .tint(DesignTokens.accent)
         }
     }
 
@@ -109,11 +120,11 @@ struct StopBoardRowView: View {
     let settings: AppSettings
 
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(alignment: .center, spacing: DesignTokens.Spacing.s) {
             RouteBadge(route: item.entry.route, entry: item.entry)
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(item.entry.dest.name(language))")
-                    .font(.subheadline)
+                    .font(DesignTokens.bodyMedium)
                     .lineLimit(1)
                 CompanyTags(co: item.entry.co, language: language)
                     .lineLimit(1)
@@ -124,8 +135,8 @@ struct StopBoardRowView: View {
                 if upcoming.isEmpty {
                     let remark = item.etas.first?.remark.name(language) ?? ""
                     Text(remark.isEmpty ? L10n.t("eta.noEta") : remark)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(DesignTokens.footnote)
+                        .foregroundStyle(DesignTokens.textTertiary)
                         .multilineTextAlignment(.trailing)
                         .lineLimit(2)
                 } else {
@@ -141,6 +152,6 @@ struct StopBoardRowView: View {
             }
             .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DesignTokens.Spacing.xs)
     }
 }

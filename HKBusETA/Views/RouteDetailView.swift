@@ -14,29 +14,31 @@ struct RouteDetailView: View {
                 let points = makePoints(entry)
                 VStack(spacing: 0) {
                     header(entry)
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
+                        .padding(.horizontal, DesignTokens.Spacing.m)
+                        .padding(.bottom, DesignTokens.Spacing.s)
 
                     if points.contains(where: { $0.coordinate != nil }) {
                         RouteMapSection(entry: entry, points: points, selectedSeq: $selectedSeq)
                             .frame(height: 230)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .padding(.horizontal)
-                            .padding(.bottom, 10)
+                            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.l, style: .continuous))
+                            .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
+                            .padding(.horizontal, DesignTokens.Spacing.m)
+                            .padding(.bottom, DesignTokens.Spacing.s)
                     }
 
                     ScrollView {
                         LazyVStack(spacing: 0) {
                             HStack {
                                 Text(L10n.t("route.section.stops"))
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                                    .font(DesignTokens.caption)
+                                    .foregroundStyle(DesignTokens.textTertiary)
                                 Spacer()
                                 Text("\(points.count) \(L10n.t("unit.stops"))")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                                    .font(DesignTokens.caption)
+                                    .monospacedDigit()
+                                    .foregroundStyle(DesignTokens.textTertiary)
                             }
-                            .padding(.bottom, 8)
+                            .padding(.bottom, DesignTokens.Spacing.s)
 
                             ForEach(points) { point in
                                 StopTimelineRow(
@@ -49,10 +51,11 @@ struct RouteDetailView: View {
                                 )
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 24)
+                        .padding(.horizontal, DesignTokens.Spacing.m)
+                        .padding(.bottom, DesignTokens.Spacing.l)
                     }
                 }
+                .appBackground()
                 .navigationTitle("\(entry.route) \(L10n.t("route.to")) \(entry.dest.name(language))")
                 .navigationBarTitleDisplayMode(.inline)
             } else {
@@ -83,30 +86,30 @@ struct RouteDetailView: View {
     }
 
     private func header(_ entry: RouteEntry) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
+            HStack(spacing: DesignTokens.Spacing.s) {
                 RouteBadge(route: entry.route, entry: entry, fontSize: 22)
                 CompanyTags(co: entry.co, language: language)
                 if entry.isSpecialTrip {
                     Text(L10n.t("route.special"))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(DesignTokens.footnote)
+                        .foregroundStyle(DesignTokens.textTertiary)
                 }
                 Spacer()
             }
 
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Text(entry.orig.name(language))
-                    .font(.subheadline)
+                    .font(DesignTokens.caption)
+                    .foregroundStyle(DesignTokens.textSecondary)
                 Image(systemName: "arrow.right")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DesignTokens.footnote)
+                    .foregroundStyle(DesignTokens.accent)
                 Text(entry.dest.name(language))
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .font(DesignTokens.bodyMedium)
             }
 
-            HStack(spacing: 14) {
+            HStack(spacing: DesignTokens.Spacing.m) {
                 if let hours = ServiceHours.hoursToday(entry, db: app.data.db ?? EtaDB.empty) {
                     labeled("clock", hours)
                 }
@@ -121,17 +124,18 @@ struct RouteDetailView: View {
                 }
             }
         }
-        .padding(.top, 4)
+        .surfaceCard()
     }
 
     private func labeled(_ systemImage: String, _ text: String) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: DesignTokens.Spacing.xs) {
             Image(systemName: systemImage)
-                .font(.caption2)
+                .font(DesignTokens.footnote)
             Text(text)
-                .font(.caption)
+                .font(DesignTokens.caption)
+                .monospacedDigit()
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(DesignTokens.textSecondary)
     }
 
     private func headwayText(_ seconds: Int) -> String {

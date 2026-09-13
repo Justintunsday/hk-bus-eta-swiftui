@@ -59,35 +59,40 @@ struct NearbyView: View {
                 .buttonStyle(.borderedProminent)
             }
         } else if app.location.location == nil || results.isEmpty {
-            VStack(spacing: 12) {
+            VStack(spacing: DesignTokens.Spacing.m) {
                 ProgressView()
+                    .tint(DesignTokens.accent)
                 Text(L10n.t("nearby.locating"))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(DesignTokens.caption)
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .appBackground()
         } else {
             List(results) { entry in
                 NavigationLink(value: StopTarget(stopId: entry.item.id)) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(language.isChinese ? L10n.display(entry.item.nameZh) : entry.item.nameEn)
-                                .font(.subheadline)
+                                .font(DesignTokens.bodyMedium)
                             let count = app.data.routeCount(at: entry.item.id)
                             if count > 0 {
                                 Text("\(count) \(L10n.t("unit.routes"))")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .font(DesignTokens.footnote)
+                                    .foregroundStyle(DesignTokens.textTertiary)
                             }
                         }
                         Spacer()
                         Text(GeoUtils.distanceString(entry.distance, language: language))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DesignTokens.caption)
                             .monospacedDigit()
+                            .foregroundStyle(DesignTokens.textSecondary)
                     }
                 }
+                .listRowBackground(DesignTokens.surface)
             }
+            .scrollContentBackground(.hidden)
+            .appBackground()
         }
     }
 

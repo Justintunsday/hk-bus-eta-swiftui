@@ -17,35 +17,43 @@ struct FavoritesView: View {
                 } else {
                     List {
                         if !app.bookmarks.favoriteRoutes.isEmpty {
-                            Section(L10n.t("favorites.routes")) {
+                            Section {
                                 ForEach(app.bookmarks.favoriteRoutes) { favorite in
                                     NavigationLink(value: RouteEtaTarget(routeKey: favorite.routeKey, seq: favorite.seq)) {
                                         routeRow(favorite)
                                     }
+                                    .listRowBackground(DesignTokens.surface)
                                 }
                                 .onDelete { app.bookmarks.removeFavoriteRoutes(at: $0) }
+                            } header: {
+                                sectionHeader(L10n.t("favorites.routes"))
                             }
                         }
                         if !app.bookmarks.favoriteStops.isEmpty {
-                            Section(L10n.t("favorites.stops")) {
+                            Section {
                                 ForEach(app.bookmarks.favoriteStops) { favorite in
                                     NavigationLink(value: StopTarget(stopId: favorite.id)) {
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
-                                                .font(.subheadline)
+                                                .font(DesignTokens.bodyMedium)
                                             let count = app.data.routeCount(at: favorite.id)
                                             if count > 0 {
                                                 Text("\(count) \(L10n.t("unit.routes"))")
-                                                    .font(.caption2)
-                                                    .foregroundStyle(.secondary)
+                                                    .font(DesignTokens.footnote)
+                                                    .foregroundStyle(DesignTokens.textTertiary)
                                             }
                                         }
                                     }
+                                    .listRowBackground(DesignTokens.surface)
                                 }
                                 .onDelete { app.bookmarks.removeFavoriteStops(at: $0) }
+                            } header: {
+                                sectionHeader(L10n.t("favorites.stops"))
                             }
                         }
                     }
+                    .scrollContentBackground(.hidden)
+                    .appBackground()
                 }
             }
             .navigationTitle(L10n.t("favorites.title"))
@@ -58,15 +66,22 @@ struct FavoritesView: View {
         }
     }
 
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(DesignTokens.caption)
+            .foregroundStyle(DesignTokens.textTertiary)
+            .textCase(nil)
+    }
+
     private func routeRow(_ favorite: FavoriteRoute) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: DesignTokens.Spacing.s) {
             RouteBadge(route: favorite.route, entry: app.data.entry(favorite.routeKey))
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(favorite.destZh) : favorite.destEn)")
-                    .font(.subheadline)
+                    .font(DesignTokens.bodyMedium)
                 Text("\(language.isChinese ? L10n.display(favorite.stopNameZh) : favorite.stopNameEn)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DesignTokens.footnote)
+                    .foregroundStyle(DesignTokens.textTertiary)
             }
         }
     }

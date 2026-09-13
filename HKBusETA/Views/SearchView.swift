@@ -45,23 +45,23 @@ struct SearchView: View {
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: DesignTokens.Spacing.s) {
                 ForEach(TransportFilter.allCases) { option in
                     Button {
                         filter = option
                     } label: {
                         Text(option.title(language))
-                            .font(.subheadline)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
+                            .font(DesignTokens.captionMedium)
+                            .padding(.horizontal, DesignTokens.Spacing.m)
+                            .padding(.vertical, DesignTokens.Spacing.s)
                             .glassCapsuleBackground(selected: filter == option)
-                            .foregroundStyle(filter == option ? Color.black : Color.primary)
+                            .foregroundStyle(filter == option ? DesignTokens.onAccent : DesignTokens.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.horizontal, DesignTokens.Spacing.m)
+            .padding(.vertical, DesignTokens.Spacing.s)
         }
     }
 
@@ -83,22 +83,37 @@ struct SearchView: View {
     private var resultList: some View {
         List {
             if !groups.isEmpty {
-                Section(L10n.t("search.section.routes")) {
+                Section {
                     ForEach(groups) { group in
                         RouteGroupRow(group: group)
+                            .listRowBackground(DesignTokens.surface)
                     }
+                } header: {
+                    sectionHeader(L10n.t("search.section.routes"))
                 }
             }
             if !stops.isEmpty {
-                Section(L10n.t("search.section.stops")) {
+                Section {
                     ForEach(stops, id: \.id) { item in
                         NavigationLink(value: StopTarget(stopId: item.id)) {
                             StopRowView(item: item, distance: distanceText(item))
                         }
+                        .listRowBackground(DesignTokens.surface)
                     }
+                } header: {
+                    sectionHeader(L10n.t("search.section.stops"))
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .appBackground()
+    }
+
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(DesignTokens.caption)
+            .foregroundStyle(DesignTokens.textTertiary)
+            .textCase(nil)
     }
 
     @ViewBuilder
@@ -112,41 +127,49 @@ struct SearchView: View {
         } else {
             List {
                 if !app.bookmarks.recentRoutes.isEmpty {
-                    Section(L10n.t("search.recent.routes")) {
+                    Section {
                         ForEach(app.bookmarks.recentRoutes) { recent in
                             NavigationLink(value: RouteEtaTarget(routeKey: recent.routeKey, seq: recent.seq)) {
-                                HStack(spacing: 10) {
+                                HStack(spacing: DesignTokens.Spacing.s) {
                                     RouteBadge(route: recent.route, entry: app.data.entry(recent.routeKey))
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(recent.destZh) : recent.destEn)")
-                                            .font(.subheadline)
+                                            .font(DesignTokens.bodyMedium)
                                         Text(language.isChinese ? L10n.display(recent.stopNameZh) : recent.stopNameEn)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .font(DesignTokens.caption)
+                                            .foregroundStyle(DesignTokens.textSecondary)
                                     }
                                 }
                             }
+                            .listRowBackground(DesignTokens.surface)
                         }
+                    } header: {
+                        sectionHeader(L10n.t("search.recent.routes"))
                     }
                 }
                 if !app.bookmarks.recentStops.isEmpty {
-                    Section(L10n.t("search.recent.stops")) {
+                    Section {
                         ForEach(app.bookmarks.recentStops) { recent in
                             NavigationLink(value: StopTarget(stopId: recent.id)) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(language.isChinese ? L10n.display(recent.nameZh) : recent.nameEn)
-                                        .font(.subheadline)
+                                        .font(DesignTokens.bodyMedium)
                                     if let count = routeCount(recent.id) {
                                         Text("\(count) \(L10n.t("unit.routes"))")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .font(DesignTokens.caption)
+                                            .foregroundStyle(DesignTokens.textSecondary)
                                     }
                                 }
                             }
+                            .listRowBackground(DesignTokens.surface)
                         }
+                    } header: {
+                        sectionHeader(L10n.t("search.recent.stops"))
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .appBackground()
         }
     }
 
@@ -196,7 +219,7 @@ struct RouteGroupRow: View {
     let group: RouteGroupPayload
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
             HStack {
                 RouteBadge(route: group.route, entry: app.data.entry(group.variants.first ?? ""))
                 CompanyTags(co: group.co, language: L10n.language)
@@ -205,23 +228,23 @@ struct RouteGroupRow: View {
             ForEach(group.variants, id: \.self) { key in
                 if let entry = app.data.entry(key) {
                     NavigationLink(value: RouteDetailTarget(routeKey: key)) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: DesignTokens.Spacing.xs) {
                             Image(systemName: "arrow.right")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(DesignTokens.footnote)
+                                .foregroundStyle(DesignTokens.accent)
                             Text(entry.dest.name(L10n.language))
-                                .font(.subheadline)
+                                .font(DesignTokens.body)
                             if entry.isSpecialTrip {
                                 Text(L10n.t("route.special"))
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .font(DesignTokens.footnote)
+                                    .foregroundStyle(DesignTokens.textTertiary)
                             }
                         }
                     }
                 }
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DesignTokens.Spacing.xxs)
     }
 }
 
@@ -232,11 +255,12 @@ struct StopRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(L10n.language.isChinese ? L10n.display(item.nameZh) : item.nameEn)
-                .font(.subheadline)
+                .font(DesignTokens.bodyMedium)
             if let distance {
                 Text(distance)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DesignTokens.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(DesignTokens.textSecondary)
             }
         }
     }
