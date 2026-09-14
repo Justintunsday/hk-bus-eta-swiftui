@@ -680,6 +680,13 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加到小组件" } }
       }
     },
+    "widget.shortLabel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Widget" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "小工具" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小组件" } }
+      }
+    },
     "widget.unpin" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove from widget" } },

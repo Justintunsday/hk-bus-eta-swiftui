@@ -9,6 +9,8 @@ import SwiftUI
 /// carry destination, origin and operators.
 struct FavoritesView: View {
     @Environment(AppState.self) private var app
+    @State private var navigationPath = NavigationPath()
+    @State private var pinnedItemIDs: Set<String> = []
 
     private var language: AppLanguage { L10n.language }
 
@@ -21,7 +23,7 @@ struct FavoritesView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 if routeSections.isEmpty && stopSections.isEmpty {
                     emptyState
@@ -49,6 +51,7 @@ struct FavoritesView: View {
                 SavedStopDestination(target: target)
             }
         }
+        .onAppear(perform: refreshPinnedItemIDs)
     }
 
     @ViewBuilder
@@ -56,8 +59,25 @@ struct FavoritesView: View {
         ForEach(routeSections) { section in
             Section {
                 ForEach(section.items) { item in
-                    NavigationLink(value: SavedRouteTarget(item)) {
-                        RouteFavoriteRow(item: item, isPinned: isRoutePinned(item))
+                    HStack(spacing: DesignTokens.Spacing.s) {
+                        Button {
+                            navigationPath.append(SavedRouteTarget(item))
+                        } label: {
+                            HStack(spacing: DesignTokens.Spacing.s) {
+                                RouteFavoriteRow(item: item)
+                                Image(systemName: "chevron.forward")
+                                    .font(DesignTokens.captionMedium)
+                                    .foregroundStyle(DesignTokens.textTertiary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        WidgetPinButton(isPinned: isRoutePinned(item)) {
+                            toggleRoutePin(item)
+                        }
                     }
                     .swipeActions(edge: .leading) {
                         Button {
@@ -89,8 +109,25 @@ struct FavoritesView: View {
         ForEach(stopSections) { section in
             Section {
                 ForEach(section.items) { item in
-                    NavigationLink(value: SavedStopTarget(item)) {
-                        StopFavoriteRow(item: item, isPinned: isStopPinned(item))
+                    HStack(spacing: DesignTokens.Spacing.s) {
+                        Button {
+                            navigationPath.append(SavedStopTarget(item))
+                        } label: {
+                            HStack(spacing: DesignTokens.Spacing.s) {
+                                StopFavoriteRow(item: item)
+                                Image(systemName: "chevron.forward")
+                                    .font(DesignTokens.captionMedium)
+                                    .foregroundStyle(DesignTokens.textTertiary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        WidgetPinButton(isPinned: isStopPinned(item)) {
+                            toggleStopPin(item)
+                        }
                     }
                     .swipeActions(edge: .leading) {
                         Button {
@@ -120,27 +157,29 @@ struct FavoritesView: View {
     // MARK: Widget pins
 
     private func isRoutePinned(_ item: RegionalFavoriteRoute) -> Bool {
-        WidgetSnapshotUpdater.isPinned(
-            id: WidgetSnapshotUpdater.routePinID(regionID: item.regionID, routeKey: item.favorite.routeKey)
+        pinnedItemIDs.contains(
+            WidgetSnapshotUpdater.routePinID(regionID: item.regionID, routeKey: item.favorite.routeKey)
         )
     }
 
     private func isStopPinned(_ item: RegionalFavoriteStop) -> Bool {
-        WidgetSnapshotUpdater.isPinned(
-            id: WidgetSnapshotUpdater.stopPinID(regionID: item.regionID, stopID: item.favorite.id)
+        pinnedItemIDs.contains(
+            WidgetSnapshotUpdater.stopPinID(regionID: item.regionID, stopID: item.favorite.id)
         )
     }
 
     private func toggleRoutePin(_ item: RegionalFavoriteRoute) {
-        let recent = item.regionID == app.region.id
-            ? app.bookmarks.recentRoutes.first { $0.routeKey == item.favorite.routeKey }
-            : nil
+        let recent = app.bookmarks.recentRoute(
+            routeKey: item.favorite.routeKey,
+            regionID: item.regionID
+        )
         WidgetSnapshotUpdater.toggleRoutePin(
             regionID: item.regionID,
             favorite: item.favorite,
             recentStop: recent,
             language: language
         )
+        refreshPinnedItemIDs()
     }
 
     private func toggleStopPin(_ item: RegionalFavoriteStop) {
@@ -149,6 +188,11 @@ struct FavoritesView: View {
             favorite: item.favorite,
             language: language
         )
+        refreshPinnedItemIDs()
+    }
+
+    private func refreshPinnedItemIDs() {
+        pinnedItemIDs = Set(WidgetSharedStore.load().items.map(\.id))
     }
 
     private var emptyState: some View {
@@ -217,7 +261,6 @@ private struct FavoriteSectionHeader: View {
 private struct RouteFavoriteRow: View {
     @Environment(AppState.self) private var app
     let item: RegionalFavoriteRoute
-    var isPinned: Bool = false
 
     private var language: AppLanguage { L10n.language }
 
@@ -250,11 +293,6 @@ private struct RouteFavoriteRow: View {
                 .lineLimit(1)
             }
             Spacer(minLength: 0)
-            if isPinned {
-                Image(systemName: "pin.fill")
-                    .font(DesignTokens.footnote)
-                    .foregroundStyle(DesignTokens.textTertiary)
-            }
         }
         .padding(.vertical, DesignTokens.Spacing.xxs)
     }
@@ -262,7 +300,6 @@ private struct RouteFavoriteRow: View {
 
 private struct StopFavoriteRow: View {
     let item: RegionalFavoriteStop
-    var isPinned: Bool = false
 
     private var language: AppLanguage { L10n.language }
 
@@ -273,11 +310,34 @@ private struct StopFavoriteRow: View {
                 .font(DesignTokens.body)
                 .lineLimit(1)
             Spacer(minLength: 0)
-            if isPinned {
-                Image(systemName: "pin.fill")
-                    .font(DesignTokens.footnote)
-                    .foregroundStyle(DesignTokens.textTertiary)
-            }
         }
+    }
+}
+
+/// A visible alternative to the retained leading-edge swipe action. The
+/// compact labelled capsule makes the widget relationship discoverable while
+/// keeping route and stop content visually dominant.
+private struct WidgetPinButton: View {
+    let isPinned: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(
+                L10n.t("widget.shortLabel"),
+                systemImage: isPinned ? "pin.fill" : "pin"
+            )
+            .font(DesignTokens.captionMedium)
+            .lineLimit(1)
+            .padding(.horizontal, DesignTokens.Spacing.s)
+            .frame(minHeight: 44)
+            .foregroundStyle(isPinned ? DesignTokens.accent : DesignTokens.textSecondary)
+            .background(
+                isPinned ? DesignTokens.accentSoft : DesignTokens.surfaceMuted,
+                in: Capsule()
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.t(isPinned ? "widget.unpin" : "widget.pin"))
     }
 }

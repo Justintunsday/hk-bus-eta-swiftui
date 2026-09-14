@@ -139,6 +139,10 @@ final class BookmarkStore {
     var recentRoutes: [RecentRoute] { current.recentRoutes }
     var recentStops: [RecentStop] { current.recentStops }
 
+    func recentRoute(routeKey: String, regionID: String) -> RecentRoute? {
+        regions[regionID]?.recentRoutes.first { $0.routeKey == routeKey }
+    }
+
     /// Favorites are displayed globally while writes and identity checks stay
     /// isolated in their original transit-region namespace.
     var allFavoriteRoutes: [RegionalFavoriteRoute] {

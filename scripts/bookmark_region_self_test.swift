@@ -50,6 +50,7 @@ struct BookmarkRegionSelfTest {
         precondition(store.favoriteRoutes.count == 1)
         precondition(store.favoriteStops.count == 1)
         precondition(store.recentRoutes.isEmpty)
+        precondition(store.recentRoute(routeKey: route.routeKey, regionID: "cl-014")?.lineID == "fixture-line")
 
         store.toggleFavoriteRoute(entry: route, routeKey: route.routeKey)
         precondition(store.favoriteRoutes.isEmpty)

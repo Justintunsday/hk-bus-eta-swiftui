@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.1 (build 13)
+
+- Added a visible, labelled widget pin button to every favorite route and
+  stop while retaining the existing leading-edge swipe action.
+- Pin state now refreshes immediately across all visible favorites, including
+  automatic removal of the oldest item when the three-pin limit is reached.
+- Out-of-region route pins now reuse that region's own most recently viewed
+  stop instead of losing the widget's station target.
+- Kept navigation and widget actions as separate 44-point touch targets with
+  localized accessibility labels.
+
 ## 1.5.0 (build 12)
 
 - Added a Home Screen and Lock Screen widget showing the next arrival for
