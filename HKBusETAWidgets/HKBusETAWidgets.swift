@@ -1,5 +1,6 @@
 ﻿import SwiftUI
 import WidgetKit
+import AppIntents
 
 @main
 struct HKBusETAWidgetBundle: WidgetBundle {
@@ -13,7 +14,50 @@ struct RouteCountdownEntry: TimelineEntry {
     let items: [WidgetPinnedItem]
 }
 
-struct RouteCountdownProvider: TimelineProvider {
+struct WidgetFavoriteEntity: AppEntity, Hashable, Sendable {
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "固定项目 / Pinned favorite"
+    static let defaultQuery = WidgetFavoriteQuery()
+
+    let id: String
+    let title: String
+    let subtitle: String
+
+    var displayRepresentation: DisplayRepresentation {
+        if subtitle.isEmpty {
+            return DisplayRepresentation(title: "\(title)")
+        }
+        return DisplayRepresentation(title: "\(title)", subtitle: "\(subtitle)")
+    }
+
+    init(_ item: WidgetPinnedItem) {
+        id = item.id
+        title = item.regionName.map { "\(item.title) · \($0)" } ?? item.title
+        subtitle = item.arrivalLabel ?? item.destination
+    }
+}
+
+struct WidgetFavoriteQuery: EntityQuery, Sendable {
+    func entities(for identifiers: [WidgetFavoriteEntity.ID]) async throws -> [WidgetFavoriteEntity] {
+        let requested = Set(identifiers)
+        return WidgetSharedStore.load().items
+            .filter { requested.contains($0.id) }
+            .map(WidgetFavoriteEntity.init)
+    }
+
+    func suggestedEntities() async throws -> [WidgetFavoriteEntity] {
+        WidgetSharedStore.load().items.map(WidgetFavoriteEntity.init)
+    }
+}
+
+struct SelectWidgetFavoriteIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "显示收藏 / Displayed favorite"
+    static var description = IntentDescription("选择 App 中已固定的线路或车站 / Choose a route or stop pinned from the app.")
+
+    @Parameter(title: "线路或车站 / Route or stop")
+    var favorite: WidgetFavoriteEntity?
+}
+
+struct RouteCountdownProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> RouteCountdownEntry {
         RouteCountdownEntry(
             date: Date(),
@@ -22,6 +66,7 @@ struct RouteCountdownProvider: TimelineProvider {
                     id: "sample",
                     kind: .route,
                     regionID: "hk",
+                    regionName: "香港",
                     title: "73A",
                     origin: "愉翠苑",
                     destination: "粉嶺(華明)",
@@ -37,29 +82,43 @@ struct RouteCountdownProvider: TimelineProvider {
         )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (RouteCountdownEntry) -> Void) {
-        completion(currentEntry())
+    func snapshot(
+        for configuration: SelectWidgetFavoriteIntent,
+        in context: Context
+    ) async -> RouteCountdownEntry {
+        currentEntry(configuration: configuration)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<RouteCountdownEntry>) -> Void) {
-        let entry = currentEntry()
+    func timeline(
+        for configuration: SelectWidgetFavoriteIntent,
+        in context: Context
+    ) async -> Timeline<RouteCountdownEntry> {
+        let entry = currentEntry(configuration: configuration)
         let now = Date()
         let next = entry.items.compactMap { $0.etas.first }.filter { $0 > now }.min()
         let refresh = min(
             next?.addingTimeInterval(60) ?? now.addingTimeInterval(900),
             now.addingTimeInterval(900)
         )
-        completion(Timeline(entries: [entry], policy: .after(refresh)))
+        return Timeline(entries: [entry], policy: .after(refresh))
     }
 
-    private func currentEntry() -> RouteCountdownEntry {
-        RouteCountdownEntry(date: Date(), items: WidgetSharedStore.load().orderedByArrival)
+    private func currentEntry(configuration: SelectWidgetFavoriteIntent) -> RouteCountdownEntry {
+        let items = WidgetSharedStore.load().orderedByArrival
+        if let selectedID = configuration.favorite?.id {
+            return RouteCountdownEntry(date: Date(), items: items.filter { $0.id == selectedID })
+        }
+        return RouteCountdownEntry(date: Date(), items: items)
     }
 }
 
 struct RouteCountdownWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: WidgetSharedStore.widgetKind, provider: RouteCountdownProvider()) { entry in
+        AppIntentConfiguration(
+            kind: WidgetSharedStore.widgetKind,
+            intent: SelectWidgetFavoriteIntent.self,
+            provider: RouteCountdownProvider()
+        ) { entry in
             RouteCountdownWidgetView(entry: entry)
         }
         .configurationDisplayName(WidgetL10n.t("下一班", "Next Arrival"))
@@ -304,6 +363,7 @@ private struct EmptyPinView: View {
 private func subtitle(_ item: WidgetPinnedItem) -> String {
     switch item.kind {
     case .route:
+        if let stopName = item.arrivalLabel, !stopName.isEmpty { return stopName }
         let destination = item.destination.isEmpty ? item.origin : item.destination
         return destination.isEmpty ? item.regionID.uppercased() : destination
     case .stop:

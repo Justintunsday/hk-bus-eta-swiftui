@@ -76,6 +76,14 @@ jobs:
             -o "$RUNNER_TEMP/bookmark_region_self_test"
           "$RUNNER_TEMP/bookmark_region_self_test"
 
+      - name: Widget snapshot compatibility self-test
+        run: |
+          xcrun swiftc -parse-as-library -O \
+            Shared/WidgetSnapshot.swift \
+            scripts/widget_snapshot_self_test.swift \
+            -o "$RUNNER_TEMP/widget_snapshot_self_test"
+          "$RUNNER_TEMP/widget_snapshot_self_test"
+
       - name: Hosted CheLaile API reachability (allowed to fail)
         continue-on-error: true
         run: |

@@ -13,6 +13,7 @@ struct WidgetPinnedItem: Codable, Hashable, Sendable, Identifiable {
     var id: String
     var kind: Kind
     var regionID: String
+    var regionName: String?
     /// Route number for route pins, stop name for stop pins.
     var title: String
     /// Route origin (route pins) or stop subtitle (stop pins).
@@ -78,6 +79,23 @@ enum WidgetSharedStore {
     static func removeAll() {
         defaults?.removeObject(forKey: snapshotKey)
     }
+
+    /// Verifies both the entitlement-backed container and a real shared
+    /// defaults round trip. A suite-name object alone is not proof that a
+    /// sideloaded build received the App Group entitlement.
+    static func appGroupIsOperational() -> Bool {
+        guard FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupID
+        ) != nil, let defaults else {
+            return false
+        }
+        let key = "widget.app-group-probe"
+        let token = UUID().uuidString
+        defaults.set(token, forKey: key)
+        let succeeded = defaults.string(forKey: key) == token
+        defaults.removeObject(forKey: key)
+        return succeeded
+    }
 }
 
 /// Warm Minimal accent shared with the widget (the app's DesignTokens file is
@@ -107,4 +125,3 @@ enum WidgetAccent {
     }
 }
 #endif
-

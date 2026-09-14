@@ -24,7 +24,7 @@ enum WidgetSnapshotUpdater {
     static func toggleRoutePin(
         regionID: String,
         favorite: FavoriteRoute,
-        recentStop: RecentRoute?,
+        target: WidgetRoutePinTarget?,
         language: AppLanguage
     ) {
         var snapshot = WidgetSharedStore.load()
@@ -37,16 +37,17 @@ enum WidgetSnapshotUpdater {
                     id: id,
                     kind: .route,
                     regionID: regionID,
+                    regionName: RegionCatalog.region(for: regionID)?.name,
                     title: favorite.route,
                     origin: localized(favorite.origZh, favorite.origEn, language),
                     destination: localized(favorite.destZh, favorite.destEn, language),
-                    arrivalLabel: nil,
+                    arrivalLabel: target?.stopName,
                     lineID: favorite.lineID,
-                    stopID: recentStop?.stopId,
-                    targetSequence: recentStop?.seq,
+                    stopID: target?.stopID,
+                    targetSequence: target?.sequence,
                     modeRawValue: favorite.modeRawValue,
-                    etas: [],
-                    updatedAt: nil
+                    etas: Array((target?.etas ?? []).compactMap(\.date).prefix(3)),
+                    updatedAt: target == nil ? nil : Date()
                 ),
                 to: &snapshot
             )
@@ -67,6 +68,7 @@ enum WidgetSnapshotUpdater {
                     id: id,
                     kind: .stop,
                     regionID: regionID,
+                    regionName: RegionCatalog.region(for: regionID)?.name,
                     title: localized(favorite.nameZh, favorite.nameEn, language),
                     origin: "",
                     destination: "",
@@ -100,6 +102,10 @@ enum WidgetSnapshotUpdater {
         var snapshot = WidgetSharedStore.load()
         let id = routePinID(regionID: regionID, routeKey: routeKey)
         guard let index = snapshot.items.firstIndex(where: { $0.id == id }) else { return }
+        if let pinnedStopID = snapshot.items[index].stopID,
+           let stopID, pinnedStopID != stopID {
+            return
+        }
         snapshot.items[index].etas = Array(etas.compactMap(\.date).prefix(3))
         snapshot.items[index].updatedAt = Date()
         if let stopID { snapshot.items[index].stopID = stopID }

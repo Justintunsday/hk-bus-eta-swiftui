@@ -722,6 +722,48 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "版本" } }
       }
     },
+    "settings.widget" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Widget" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "小工具" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小组件" } }
+      }
+    },
+    "settings.widget.appGroup" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Group sharing" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "App Group 共享" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "App Group 共享" } }
+      }
+    },
+    "settings.widget.appGroup.active" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Working" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "已生效" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已生效" } }
+      }
+    },
+    "settings.widget.appGroup.unavailable" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unavailable" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "不可用" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不可用" } }
+      }
+    },
+    "settings.widget.checkAppGroup" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Check again" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "重新檢查" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新检查" } }
+      }
+    },
+    "settings.widget.appGroup.help" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Checks that the app and widget can access and write the shared container. Some free sideloading certificates do not support App Groups." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "檢查 App 與小工具能否存取及寫入共享容器。部分免費側載憑證不支援 App Groups。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "检查 App 与小组件能否访问及写入共享容器。部分免费侧载证书不支持 App Groups。" } }
+      }
+    },
     "status.checkingUpdate" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking for updates..." } },

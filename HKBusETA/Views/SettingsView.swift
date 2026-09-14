@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppState.self) private var app
     @State private var isRefreshing = false
+    @State private var appGroupIsOperational: Bool?
 
     var body: some View {
         NavigationStack {
@@ -94,6 +95,37 @@ struct SettingsView: View {
                     .disabled(app.data.isDownloading || isRefreshing)
                 }
 
+                Section(L10n.t("settings.widget")) {
+                    LabeledContent(L10n.t("settings.widget.appGroup")) {
+                        if let appGroupIsOperational {
+                            Label(
+                                L10n.t(appGroupIsOperational
+                                    ? "settings.widget.appGroup.active"
+                                    : "settings.widget.appGroup.unavailable"),
+                                systemImage: appGroupIsOperational
+                                    ? "checkmark.circle.fill"
+                                    : "exclamationmark.triangle.fill"
+                            )
+                            .font(DesignTokens.captionMedium)
+                            .foregroundStyle(
+                                appGroupIsOperational
+                                    ? DesignTokens.success
+                                    : DesignTokens.warning
+                            )
+                        } else {
+                            ProgressView()
+                        }
+                    }
+                    Button {
+                        checkAppGroup()
+                    } label: {
+                        Label(L10n.t("settings.widget.checkAppGroup"), systemImage: "arrow.clockwise")
+                    }
+                    Text(L10n.t("settings.widget.appGroup.help"))
+                        .font(DesignTokens.caption)
+                        .foregroundStyle(DesignTokens.textSecondary)
+                }
+
                 Section(L10n.t("settings.about")) {
                     LabeledContent(L10n.t("settings.version"), value: appVersion)
                     Link(destination: URL(string: "https://hkbus.app")!) {
@@ -113,6 +145,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(L10n.t("settings.title"))
+            .onAppear(perform: checkAppGroup)
         }
     }
 
@@ -120,5 +153,9 @@ struct SettingsView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
+    }
+
+    private func checkAppGroup() {
+        appGroupIsOperational = WidgetSharedStore.appGroupIsOperational()
     }
 }

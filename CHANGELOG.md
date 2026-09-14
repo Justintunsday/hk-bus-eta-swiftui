@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.0 (build 14)
+
+- Added an App Group diagnostic in Settings that verifies both the shared
+  container entitlement and a real read/write round trip.
+- Route pins now resolve the stop nearest the device, store its name and
+  sequence, and fetch that stop's arrivals before updating the widget.
+- Preserved the nearest-stop target when other stops on the same route are
+  viewed, with the most recent stop retained as a location-unavailable fallback.
+- Replaced the static widget configuration with an App Intent picker so each
+  widget instance can select one of the routes or stops pinned from the app.
+- Widget choices include the owning region to distinguish same-number routes
+  from different transit systems.
+
 ## 1.5.1 (build 13)
 
 - Added a visible, labelled widget pin button to every favorite route and

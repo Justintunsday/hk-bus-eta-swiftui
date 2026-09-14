@@ -11,6 +11,7 @@ struct FavoritesView: View {
     @Environment(AppState.self) private var app
     @State private var navigationPath = NavigationPath()
     @State private var pinnedItemIDs: Set<String> = []
+    @State private var resolvingPinIDs: Set<String> = []
 
     private var language: AppLanguage { L10n.language }
 
@@ -75,7 +76,10 @@ struct FavoritesView: View {
                         .buttonStyle(.plain)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                        WidgetPinButton(isPinned: isRoutePinned(item)) {
+                        WidgetPinButton(
+                            isPinned: isRoutePinned(item),
+                            isLoading: resolvingPinIDs.contains(item.id)
+                        ) {
                             toggleRoutePin(item)
                         }
                     }
@@ -169,17 +173,32 @@ struct FavoritesView: View {
     }
 
     private func toggleRoutePin(_ item: RegionalFavoriteRoute) {
-        let recent = app.bookmarks.recentRoute(
-            routeKey: item.favorite.routeKey,
-            regionID: item.regionID
-        )
-        WidgetSnapshotUpdater.toggleRoutePin(
-            regionID: item.regionID,
-            favorite: item.favorite,
-            recentStop: recent,
-            language: language
-        )
-        refreshPinnedItemIDs()
+        if isRoutePinned(item) {
+            WidgetSnapshotUpdater.toggleRoutePin(
+                regionID: item.regionID,
+                favorite: item.favorite,
+                target: nil,
+                language: language
+            )
+            refreshPinnedItemIDs()
+            return
+        }
+        guard resolvingPinIDs.insert(item.id).inserted else { return }
+        Task {
+            let target = await WidgetRoutePinService.resolve(
+                item: item,
+                app: app,
+                language: language
+            )
+            WidgetSnapshotUpdater.toggleRoutePin(
+                regionID: item.regionID,
+                favorite: item.favorite,
+                target: target,
+                language: language
+            )
+            refreshPinnedItemIDs()
+            resolvingPinIDs.remove(item.id)
+        }
     }
 
     private func toggleStopPin(_ item: RegionalFavoriteStop) {
@@ -319,14 +338,21 @@ private struct StopFavoriteRow: View {
 /// keeping route and stop content visually dominant.
 private struct WidgetPinButton: View {
     let isPinned: Bool
+    var isLoading: Bool = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Label(
-                L10n.t("widget.shortLabel"),
-                systemImage: isPinned ? "pin.fill" : "pin"
-            )
+            Group {
+                if isLoading {
+                    ProgressView()
+                } else {
+                    Label(
+                        L10n.t("widget.shortLabel"),
+                        systemImage: isPinned ? "pin.fill" : "pin"
+                    )
+                }
+            }
             .font(DesignTokens.captionMedium)
             .lineLimit(1)
             .padding(.horizontal, DesignTokens.Spacing.s)
@@ -338,6 +364,7 @@ private struct WidgetPinButton: View {
             )
         }
         .buttonStyle(.plain)
+        .disabled(isLoading)
         .accessibilityLabel(L10n.t(isPinned ? "widget.unpin" : "widget.pin"))
     }
 }
