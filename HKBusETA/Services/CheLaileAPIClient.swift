@@ -126,12 +126,17 @@ actor CheLaileAPILineDetailCache {
 /// The default deployment is public and does not need a key. Both the base
 /// URL and optional key can be supplied by generated Info.plist values or
 /// environment variables. No credential is stored in source code.
+///
+/// Per the API documentation the Cloudflare Workers instance is the
+/// recommended deployment (no cold start) and the Vercel instance is used as
+/// an automatic fallback when the primary is unreachable.
 struct CheLaileAPIClient: Sendable {
-    static let defaultBaseURL = URL(string: "https://chelaile-api-server.vercel.app/v1")!
+    static let defaultBaseURL = URL(string: "https://ts-api.tundrey.com/v1")!
+    static let fallbackBaseURL = URL(string: "https://chelaile-api-server.vercel.app/v1")!
     static let baseURLInfoPlistKey = "CHELAILE_API_BASE_URL"
     static let apiKeyInfoPlistKey = "CHELAILE_API_KEY"
 
-    private let baseURL: URL?
+    private let baseURLs: [URL]
     private let apiKey: String?
     private let transport: any CheLaileAPITransport
     private let lineCache: CheLaileAPILineDetailCache
@@ -144,14 +149,33 @@ struct CheLaileAPIClient: Sendable {
         transport: any CheLaileAPITransport = CheLaileAPIURLSessionTransport(),
         lineCache: CheLaileAPILineDetailCache = CheLaileAPILineDetailCache()
     ) {
-        let resolvedBaseURL = baseURL ?? Self.resolveBaseURL(bundle: bundle, environment: environment)
-        self.baseURL = Self.normalizedBaseURL(resolvedBaseURL)
+        if let baseURL {
+            self.baseURLs = [Self.normalizedBaseURL(baseURL)].compactMap { $0 }
+        } else {
+            self.baseURLs = Self.resolvedBaseURLs(bundle: bundle, environment: environment)
+        }
 
         let resolvedKey = apiKey ?? Self.resolveAPIKey(bundle: bundle, environment: environment)
         let trimmedKey = resolvedKey?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.apiKey = trimmedKey.flatMap { Self.isUsableValue($0) ? $0 : nil }
         self.transport = transport
         self.lineCache = lineCache
+    }
+
+    /// Explicit overrides point at a single instance; the built-in default
+    /// keeps the documented fallback so one dead deployment cannot take the
+    /// mainland regions offline.
+    private static func resolvedBaseURLs(
+        bundle: Bundle,
+        environment: [String: String]
+    ) -> [URL] {
+        guard let resolved = resolveBaseURL(bundle: bundle, environment: environment) else {
+            return []
+        }
+        if resolved == defaultBaseURL {
+            return [defaultBaseURL, fallbackBaseURL]
+        }
+        return [resolved]
     }
 
     static func resolveBaseURL(
@@ -297,6 +321,42 @@ struct CheLaileAPIClient: Sendable {
         for (name, value) in parameters where value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             throw CheLaileAPIError.invalidRequest("Missing required parameter: \(name)")
         }
+        guard !baseURLs.isEmpty else { throw CheLaileAPIError.invalidURL }
+
+        var lastError: Error = CheLaileAPIError.invalidURL
+        for (index, baseURL) in baseURLs.enumerated() {
+            do {
+                return try await performRequest(endpoint, parameters: parameters, baseURL: baseURL)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch let error as CheLaileAPIError {
+                lastError = error
+                guard index < baseURLs.count - 1, Self.isInstanceFailure(error) else {
+                    throw error
+                }
+            }
+        }
+        throw lastError
+    }
+
+    /// Transport problems and 5xx responses mean the instance is unhealthy;
+    /// request-level errors (4xx) would repeat on the fallback instance too.
+    private static func isInstanceFailure(_ error: CheLaileAPIError) -> Bool {
+        switch error {
+        case .transport, .invalidURL:
+            return true
+        case let .httpStatus(statusCode):
+            return statusCode >= 500
+        default:
+            return false
+        }
+    }
+
+    private func performRequest(
+        _ endpoint: CheLaileAPIEndpoint,
+        parameters: [(String, String)],
+        baseURL: URL
+    ) async throws -> Data {
         guard let url = try? Self.makeURL(baseURL: baseURL, endpoint: endpoint, parameters: parameters) else {
             throw CheLaileAPIError.invalidURL
         }

@@ -1,7 +1,18 @@
 # Changelog
 
-## 1.4.1 (build 8)
+## 1.4.1 (build 9)
 
+- Updated the mainland integration to the documented hosted CheLaile API:
+  `https://ts-api.tundrey.com/v1` is now the primary instance with
+  `https://chelaile-api-server.vercel.app/v1` as an automatic fallback on
+  transport and 5xx failures.
+- Removed the reverse-engineered direct CheLaile client (MD5 signing + AES
+  envelope) and its provider; all mainland queries now go through the
+  documented hosted API.
+- Simplified the mainland provider composition to hosted primary + optional
+  AMap base data.
+- CI drops the legacy client self-tests and adds a non-blocking hosted API
+  reachability probe.
 - Favorites now aggregate routes and stops from every saved transit region,
   with an explicit region label to prevent same-number services from mixing.
 - Opening an out-of-region favorite switches to its owning transit system

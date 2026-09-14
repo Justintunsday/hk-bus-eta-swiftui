@@ -23,15 +23,15 @@ struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
             adcode: adcode,
             citycode: cityCode
         )
-        let legacy = LegacyCheLaileProvider(cityId: cityCode, cityName: cityName)
         let hosted = CheLaileAPIProvider(
             cityId: cityCode,
             cityName: cityName,
             adcode: adcode
         )
-        // The hosted API is the full-capability primary. Legacy direct
-        // CheLaile remains available to the router for service/upstream
-        // failures; the factory may put AMap between them for base data only.
+        // The hosted API is the full-capability primary. The client already
+        // fails over between the documented public instances, so no separate
+        // legacy provider is needed; AMap remains a base-data-only fallback
+        // when a key is configured.
         let selectedRealtime: (any MainlandRealtimeProvider)? = realtime ?? hosted
         self.cityIdentifier = city
         self.stableID = "mainland-\(adcode ?? cityCode)"
@@ -39,7 +39,7 @@ struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
             primary: hosted,
             city: city,
             regionName: cityName,
-            fallback: legacy,
+            fallback: nil,
             realtime: selectedRealtime,
             client: client
         )

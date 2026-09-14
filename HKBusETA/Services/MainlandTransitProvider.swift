@@ -617,19 +617,18 @@ struct MainlandProviderRouter: MainlandTransitProvider {
     }
 }
 
-/// Factory used by the app integration layer.  It keeps the legacy provider
-/// opaque: callers supply it as `fallback`, and no data-source-specific type
-/// is referenced from this foundation layer.
+/// Factory used by the app integration layer. The hosted CheLaile API owns
+/// all realtime capabilities; an optional AMap client only supplies base
+/// data when configured.
 enum MainlandProviderFactory {
     /// Makes the hosted CheLaile API the complete primary provider. If AMap
-    /// is configured it is used only as a base-data fallback, with legacy
-    /// direct CheLaile behind it. This prevents AMap IDs from being sent to
-    /// the hosted realtime endpoint.
+    /// is configured it is used only as a base-data fallback. The fallback
+    /// parameter is kept for tests and alternative integrations.
     static func apiPrimaryOrAmapFallback(
         primary: any MainlandTransitProvider,
         city: MainlandCityIdentifier,
         regionName: String,
-        fallback: any MainlandTransitProvider,
+        fallback: (any MainlandTransitProvider)? = nil,
         realtime: (any MainlandRealtimeProvider)? = nil,
         client: AMapClient? = nil
     ) -> any MainlandTransitProvider {
@@ -640,14 +639,14 @@ enum MainlandProviderFactory {
             resolvedClient = try? AMapClient()
         }
 
-        let baseFallback: any MainlandTransitProvider
+        let baseFallback: (any MainlandTransitProvider)?
         if let resolvedClient {
             let amap = AMapTransitProvider(
                 client: resolvedClient,
                 city: city,
                 regionName: regionName
             )
-            baseFallback = MainlandProviderRouter(primary: amap, fallback: fallback)
+            baseFallback = fallback.map { MainlandProviderRouter(primary: amap, fallback: $0) } ?? amap
         } else {
             baseFallback = fallback
         }

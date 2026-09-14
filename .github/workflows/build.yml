@@ -76,22 +76,11 @@ jobs:
             -o "$RUNNER_TEMP/bookmark_region_self_test"
           "$RUNNER_TEMP/bookmark_region_self_test"
 
-      - name: Legacy CheLaile envelope self-test
-        run: |
-          xcrun swiftc -parse-as-library -O \
-            HKBusETA/Services/CheLaileClient.swift \
-            scripts/chelaile_envelope_self_test.swift \
-            -o "$RUNNER_TEMP/chelaile_envelope_self_test"
-          "$RUNNER_TEMP/chelaile_envelope_self_test"
-
-      - name: Legacy CheLaile network smoke test (allowed to fail)
+      - name: Hosted CheLaile API reachability (allowed to fail)
         continue-on-error: true
         run: |
-          xcrun swiftc -parse-as-library -O \
-            HKBusETA/Services/CheLaileClient.swift \
-            scripts/chelaile_smoke.swift \
-            -o "$RUNNER_TEMP/chelaile_smoke"
-          "$RUNNER_TEMP/chelaile_smoke"
+          curl -fsS --max-time 20 "https://ts-api.tundrey.com/v1/health"
+          curl -fsS --max-time 20 "https://chelaile-api-server.vercel.app/v1/health"
 
       - name: Build for iOS Simulator
         run: |

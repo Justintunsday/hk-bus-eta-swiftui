@@ -70,7 +70,7 @@ struct FavoritesView: View {
 
     private func routeRow(_ item: RegionalFavoriteRoute) -> some View {
         let favorite = item.favorite
-        HStack(spacing: 12) {
+        return HStack(spacing: 12) {
             RouteBadge(
                 route: favorite.route,
                 entry: item.regionID == app.region.id ? app.data.entry(favorite.routeKey) : nil
