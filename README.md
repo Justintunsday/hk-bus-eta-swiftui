@@ -27,6 +27,10 @@ official base data when configured. This is not an official app.
   timeline of stops, tap a stop to expand inline arrivals, and navigate to
   any stop with a valid coordinate
 - Stop departure boards with aligned tabular ETA columns
+- **Home Screen & Lock Screen widget** for pinned favorites: small/medium
+  home widgets and circular/rectangular/inline lock screen families, with
+  live countdowns for the next arrival (pin favorites from the Favorites
+  page; up to three pins)
 - Nearby stops with distance, favorites for whole routes and stops, recents
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English
@@ -65,6 +69,9 @@ official base data when configured. This is not an official app.
   protocols/routers, AMapClient/AMapTransitProvider, hosted CheLaile client,
   DataStore, ETA services, bookmarks, location
 - `HKBusETA/Views` — search, route, ETA, nearby, favorites, settings
+- `HKBusETAWidgets` — WidgetKit extension (home + lock screen families)
+  reading a small snapshot from the `group.app.hkbus.swiftui` App Group;
+  `Shared/WidgetSnapshot.swift` is compiled into both targets
 - `docs/brand-spec.md` — Warm Minimal design system
 
 ## Build
