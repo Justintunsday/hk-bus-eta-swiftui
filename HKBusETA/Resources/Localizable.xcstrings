@@ -778,6 +778,20 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "第一项检查 App 读写权限；连接时间确认小组件扩展也曾访问共享容器。部分免费侧载证书不支持 App Groups。" } }
       }
     },
+    "settings.widget.sideStore.help" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Group is unavailable. Add the SideStore “Route & stop” widget and search with a city prefix, such as “Foshan 352” or “Shanghai 71 People's Square”; it works without favorites sharing." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "App Group 不可用。請加入 SideStore「線路與車站」小工具，以城市開頭搜尋，例如「佛山 352」或「上海 71 人民廣場」；無需收藏共享也能使用。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "App Group 不可用。请加入 SideStore“线路与车站”小组件，以城市开头搜索，例如“佛山 352”或“上海 71 人民广场”；无需收藏共享也能使用。" } }
+      }
+    },
+    "settings.widget.sideStore.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SideStore configuration" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "SideStore 配置" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SideStore 配置" } }
+      }
+    },
     "status.checkingUpdate" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Checking for updates..." } },

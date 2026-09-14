@@ -6,6 +6,7 @@ import AppIntents
 struct HKBusETAWidgetBundle: WidgetBundle {
     var body: some Widget {
         RouteCountdownWidget()
+        SideStoreTransitWidget()
     }
 }
 

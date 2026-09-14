@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.6.1
+# Where My Bus Now (WMBN) · 1.7.0
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 
@@ -31,6 +31,10 @@ official base data when configured. This is not an official app.
   home widgets and circular/rectangular/inline lock screen families, with
   live countdowns for the next arrival (pin favorites from the Favorites
   page; up to three pins)
+- **SideStore-compatible Route & stop widget**: one searchable AppEntity accepts
+  a city-prefixed query such as `佛山 352` or `上海 71 人民广场`, carries its
+  city ID/name, route direction and station in a self-contained ID, and calls
+  the hosted API directly without App Group sharing or location
 - Nearby stops with distance, favorites for whole routes and stops, recents
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English
@@ -70,8 +74,12 @@ official base data when configured. This is not an official app.
   DataStore, ETA services, bookmarks, location
 - `HKBusETA/Views` — search, route, ETA, nearby, favorites, settings
 - `HKBusETAWidgets` — WidgetKit extension (home + lock screen families)
-  reading a small snapshot from the `group.app.hkbus.swiftui` App Group;
-  `Shared/WidgetSnapshot.swift` is compiled into both targets
+  - `RouteCountdownWidget`: existing App Group-backed favorites snapshot
+  - `SideStoreTransitWidget`: independently searchable city/route/stop target;
+    the extension calls `/search`, `/lines/detail` and `/lines/realtime`
+    directly and falls back from the primary hosted API to Vercel
+  - `Shared/WidgetSnapshot.swift` remains compiled into both targets for the
+    App Group favorites configuration
 - `docs/brand-spec.md` — Warm Minimal design system
 
 ## Build
@@ -114,6 +122,9 @@ app, an unsigned device archive and an IPA on every push.
 - Mainland realtime ETA: supplied by the hosted CheLaile API, which adapts the
   unofficial CheLaile upstream and may break at any time. AMap is never
   described or used as realtime.
+- SideStore widget refresh: the extension refreshes its configured target at
+  most every 15 minutes. When the API or ETA is unavailable it keeps the target
+  identity visible and shows a stable no-data state.
 - Operator glyphs: from [hk-independent-bus-eta](https://github.com/hkbus/hk-independent-bus-eta)
   `public/img` (GPL-3.0)
 

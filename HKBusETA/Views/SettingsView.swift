@@ -142,6 +142,20 @@ struct SettingsView: View {
                     Text(L10n.t("settings.widget.appGroup.help"))
                         .font(DesignTokens.caption)
                         .foregroundStyle(DesignTokens.textSecondary)
+                    if appGroupIsOperational == false {
+                        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                            Label(
+                                L10n.t("settings.widget.sideStore.title"),
+                                systemImage: "rectangle.stack.badge.plus"
+                            )
+                            .font(DesignTokens.bodyMedium)
+                            .foregroundStyle(DesignTokens.accent)
+                            Text(L10n.t("settings.widget.sideStore.help"))
+                                .font(DesignTokens.caption)
+                                .foregroundStyle(DesignTokens.textSecondary)
+                        }
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                    }
                 }
 
                 Section(L10n.t("settings.about")) {

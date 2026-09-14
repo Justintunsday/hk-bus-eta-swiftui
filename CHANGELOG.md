@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.0 (build 16)
+
+- Added a SideStore-compatible “Route & stop” widget with one searchable
+  AppEntity. Queries such as `佛山 352` and `上海 71 人民广场` resolve to a
+  self-contained target carrying city ID/name, route direction and station.
+- The new widget calls the hosted CheLaile API directly from the extension,
+  using `https://ts-api.tundrey.com/v1` with the Vercel deployment as fallback;
+  it refreshes every 15 minutes and never requests location or App Group data.
+- Kept the App Group favorites widget and added a Settings hint for the
+  SideStore configuration when App Group sharing is unavailable.
+
 ## 1.6.1 (build 15)
 
 - Extended the App Group diagnostic with a widget-side heartbeat and the

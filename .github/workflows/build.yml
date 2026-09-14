@@ -84,6 +84,15 @@ jobs:
             -o "$RUNNER_TEMP/widget_snapshot_self_test"
           "$RUNNER_TEMP/widget_snapshot_self_test"
 
+      - name: SideStore widget target self-test
+        run: |
+          xcrun swiftc -parse-as-library -O \
+            HKBusETAWidgets/WidgetTransitTarget.swift \
+            HKBusETAWidgets/WidgetTransitAPI.swift \
+            scripts/widget_transit_target_self_test.swift \
+            -o "$RUNNER_TEMP/widget_transit_target_self_test"
+          "$RUNNER_TEMP/widget_transit_target_self_test"
+
       - name: Hosted CheLaile API reachability (allowed to fail)
         continue-on-error: true
         run: |
