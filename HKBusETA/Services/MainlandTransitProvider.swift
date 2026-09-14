@@ -88,6 +88,7 @@ enum MainlandTransitMode: String, Codable, Hashable, Sendable {
 /// Identifies which part of a composed provider produced a value.
 enum MainlandDataSource: String, Codable, Hashable, Sendable {
     case amapBase
+    case chelaileAPI
     case authorizedRealtime
     case legacyFallback
     case composite
@@ -234,13 +235,16 @@ struct MainlandTransitLine: Identifiable, Codable, Hashable, Sendable {
 struct MainlandStopBoardResult: Codable, Hashable, Sendable {
     var rows: [MainlandBoardLine]
     var otherLines: [MainlandTransitLine]
+    var location: StopLocation?
 
     init(
         rows: [MainlandBoardLine] = [],
-        otherLines: [MainlandTransitLine] = []
+        otherLines: [MainlandTransitLine] = [],
+        location: StopLocation? = nil
     ) {
         self.rows = rows
         self.otherLines = otherLines
+        self.location = location
     }
 }
 
@@ -355,6 +359,9 @@ protocol MainlandTransitProvider: Sendable {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double?,
+        longitude: Double?,
+        source: MainlandDataSource?,
         language: AppLanguage,
         modeHint: MainlandTransitMode?
     ) async throws -> [Eta]
@@ -369,12 +376,18 @@ extension MainlandTransitProvider {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        source: MainlandDataSource? = nil,
         language: AppLanguage
     ) async throws -> [Eta] {
         try await fetchEtas(
             lineID: lineID,
             stopID: stopID,
             stopSequence: stopSequence,
+            latitude: latitude,
+            longitude: longitude,
+            source: source,
             language: language,
             modeHint: nil
         )
@@ -430,6 +443,9 @@ protocol MainlandRealtimeProvider: Sendable {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double?,
+        longitude: Double?,
+        source: MainlandDataSource?,
         language: AppLanguage,
         modeHint: MainlandTransitMode?
     ) async throws -> [Eta]
@@ -510,15 +526,29 @@ struct MainlandProviderRouter: MainlandTransitProvider {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        source: MainlandDataSource? = nil,
         language: AppLanguage,
         modeHint: MainlandTransitMode?
     ) async throws -> [Eta] {
+        // AMap IDs are not CheLaile API physical/sId identities. Do not
+        // issue a plausible-looking but invalid realtime request for a route
+        // that came from the official AMap base provider.
+        if source == .amapBase {
+            throw MainlandProviderError.realtimeUnavailable(
+                source: "AMap base route has no compatible CheLaile station identity"
+            )
+        }
         if let realtime {
             do {
                 return try await realtime.fetchEtas(
                     lineID: lineID,
                     stopID: stopID,
                     stopSequence: stopSequence,
+                    latitude: latitude,
+                    longitude: longitude,
+                    source: source,
                     language: language,
                     modeHint: modeHint
                 )
@@ -534,6 +564,9 @@ struct MainlandProviderRouter: MainlandTransitProvider {
                 lineID: lineID,
                 stopID: stopID,
                 stopSequence: stopSequence,
+                latitude: latitude,
+                longitude: longitude,
+                source: source,
                 language: language,
                 modeHint: modeHint
             )
@@ -544,6 +577,9 @@ struct MainlandProviderRouter: MainlandTransitProvider {
                 lineID: lineID,
                 stopID: stopID,
                 stopSequence: stopSequence,
+                latitude: latitude,
+                longitude: longitude,
+                source: source,
                 language: language,
                 modeHint: modeHint
             )
@@ -574,6 +610,9 @@ struct MainlandProviderRouter: MainlandTransitProvider {
                 return true
             }
         }
+        if let apiError = error as? CheLaileAPIError {
+            return apiError.isFallbackEligible
+        }
         return false
     }
 }
@@ -582,6 +621,43 @@ struct MainlandProviderRouter: MainlandTransitProvider {
 /// opaque: callers supply it as `fallback`, and no data-source-specific type
 /// is referenced from this foundation layer.
 enum MainlandProviderFactory {
+    /// Makes the hosted CheLaile API the complete primary provider. If AMap
+    /// is configured it is used only as a base-data fallback, with legacy
+    /// direct CheLaile behind it. This prevents AMap IDs from being sent to
+    /// the hosted realtime endpoint.
+    static func apiPrimaryOrAmapFallback(
+        primary: any MainlandTransitProvider,
+        city: MainlandCityIdentifier,
+        regionName: String,
+        fallback: any MainlandTransitProvider,
+        realtime: (any MainlandRealtimeProvider)? = nil,
+        client: AMapClient? = nil
+    ) -> any MainlandTransitProvider {
+        let resolvedClient: AMapClient?
+        if let client {
+            resolvedClient = client
+        } else {
+            resolvedClient = try? AMapClient()
+        }
+
+        let baseFallback: any MainlandTransitProvider
+        if let resolvedClient {
+            let amap = AMapTransitProvider(
+                client: resolvedClient,
+                city: city,
+                regionName: regionName
+            )
+            baseFallback = MainlandProviderRouter(primary: amap, fallback: fallback)
+        } else {
+            baseFallback = fallback
+        }
+        return MainlandProviderRouter(
+            primary: primary,
+            fallback: baseFallback,
+            realtime: realtime
+        )
+    }
+
     static func amapOrFallback(
         city: MainlandCityIdentifier,
         regionName: String,

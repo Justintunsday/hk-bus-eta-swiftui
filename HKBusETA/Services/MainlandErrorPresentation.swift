@@ -27,6 +27,7 @@ extension MainlandDataSource {
     var localizedName: String {
         switch self {
         case .amapBase: return L10n.t("mainland.source.amap")
+        case .chelaileAPI: return L10n.t("mainland.source.chelaileAPI")
         case .authorizedRealtime: return L10n.t("mainland.source.authorizedRealtime")
         case .legacyFallback: return L10n.t("mainland.source.legacy")
         case .composite: return L10n.t("mainland.source.composite")

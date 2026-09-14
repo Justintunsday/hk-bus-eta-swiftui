@@ -66,6 +66,9 @@ struct LegacyCheLaileProvider: TransitProvider, MainlandTransitProvider, Mainlan
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        source: MainlandDataSource? = nil,
         language: AppLanguage,
         modeHint: MainlandTransitMode? = nil
     ) async throws -> [Eta] {

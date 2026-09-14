@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 (build 7)
+
+- Replaced the mainland primary source with the hosted CheLaile `/v1` API for
+  search, nearby stops, stop boards, line details and realtime ETAs.
+- Kept `LegacyCheLaileProvider` as an eligible-failure fallback and retained
+  optional AMap as official base data without mixing its IDs into hosted ETA
+  requests.
+- Added deterministic offline fixtures for direction flattening, physical
+  stop IDs, `sId` realtime translation, WGS-84 coordinates, ETA mapping and
+  400-vs-503 fallback behavior.
+- Preserved each existing mainland region ID and its independent bookmark and
+  recent-history namespace.
+
 ## 1.3.0 (build 6)
 
 - Added station navigation from Hong Kong and mainland stop boards, route

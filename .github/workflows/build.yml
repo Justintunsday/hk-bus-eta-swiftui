@@ -29,10 +29,30 @@ jobs:
             HKBusETA/Models/TransitOperator.swift \
             HKBusETA/Services/MainlandTransitProvider.swift \
             HKBusETA/Services/AMapClient.swift \
+            HKBusETA/Services/CheLaileAPIClient.swift \
             HKBusETA/Services/AMapTransitProvider.swift \
             scripts/mainland_self_test.swift \
             -o "$RUNNER_TEMP/mainland_self_test"
           "$RUNNER_TEMP/mainland_self_test"
+
+      - name: Offline hosted CheLaile API self-test
+        run: |
+          xcrun swiftc -parse-as-library -O \
+            HKBusETA/Utilities/ChineseConverter.swift \
+            HKBusETA/Utilities/Localization.swift \
+            HKBusETA/Models/EtaDB.swift \
+            HKBusETA/Models/Eta.swift \
+            HKBusETA/Models/TransitOperator.swift \
+            HKBusETA/Services/TransitProvider.swift \
+            HKBusETA/Services/MainlandTransitProvider.swift \
+            HKBusETA/Services/MainlandRouteAdapter.swift \
+            HKBusETA/Services/AMapClient.swift \
+            HKBusETA/Services/AMapTransitProvider.swift \
+            HKBusETA/Services/CheLaileAPIClient.swift \
+            HKBusETA/Services/CheLaileAPIProvider.swift \
+            scripts/chelaile_api_self_test.swift \
+            -o "$RUNNER_TEMP/chelaile_api_self_test"
+          "$RUNNER_TEMP/chelaile_api_self_test"
 
       - name: Offline stop navigation self-test
         run: |

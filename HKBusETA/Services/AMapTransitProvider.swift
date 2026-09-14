@@ -112,6 +112,9 @@ struct AMapTransitProvider: MainlandTransitProvider {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        source: MainlandDataSource? = nil,
         language: AppLanguage,
         modeHint: MainlandTransitMode?
     ) async throws -> [Eta] {

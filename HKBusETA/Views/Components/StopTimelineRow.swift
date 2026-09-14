@@ -187,10 +187,14 @@ struct StopEtaInlineView: View {
                 isLoading = false
                 return
             }
+            let stopLocation = app.data.stop(stopIDs[seq])?.location
             etas = (try? await mainland.fetchEtas(
                 lineID: lineID,
                 stopID: stopIDs[seq],
                 stopSequence: seq,
+                latitude: stopLocation?.coordinateSystem == .wgs84 ? stopLocation?.lat : nil,
+                longitude: stopLocation?.coordinateSystem == .wgs84 ? stopLocation?.lng : nil,
+                source: mainlandMetadata?.source,
                 language: language,
                 modeHint: mainlandMetadata?.mode
             )) ?? []

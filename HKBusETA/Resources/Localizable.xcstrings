@@ -589,6 +589,13 @@
     "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "高德官方基础数据" } }
   }
 },
+"mainland.source.chelaileAPI" : {
+  "localizations" : {
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "CheLaile API primary" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "車來了 API 主接口" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "车来了 API 主接口" } }
+  }
+},
 "mainland.source.authorizedRealtime" : {
   "localizations" : {
     "en" : { "stringUnit" : { "state" : "translated", "value" : "Authorized realtime feed" } },
@@ -605,9 +612,9 @@
 },
 "mainland.source.composite" : {
   "localizations" : {
-    "en" : { "stringUnit" : { "state" : "translated", "value" : "Combined sources" } },
-    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "組合數據源" } },
-    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "组合数据源" } }
+    "en" : { "stringUnit" : { "state" : "translated", "value" : "CheLaile API primary · legacy direct fallback" } },
+    "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "車來了 API 主接口 · 舊直連後備" } },
+    "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "车来了 API 主接口 · 旧直连备用" } }
   }
 },
     "settings.region" : {
@@ -626,16 +633,16 @@
     },
     "settings.region.mainlandNotice" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mainland regions prefer AMap official route data when AMAP_WEB_SERVICE_KEY is configured. The legacy 车来了 source remains a fallback; all data is for reference only." } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "內地地區在設定 AMAP_WEB_SERVICE_KEY 後優先使用高德官方路線資料；非官方「車來了」僅作兼容後備，資料僅供參考。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内地地区在配置 AMAP_WEB_SERVICE_KEY 后优先使用高德官方线路数据；非官方“车来了”仅作兼容后备，数据仅供参考。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CheLaile API is the primary mainland source. AMap is used only as an official base-data fallback when configured; legacy direct CheLaile is the final fallback. All data is for reference only." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "內地主接口為車來了 API；設定 AMAP_WEB_SERVICE_KEY 後，高德僅作官方基礎資料後備，舊車來了直連為最終後備。資料僅供參考。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "内地主接口为车来了 API；配置 AMAP_WEB_SERVICE_KEY 后，高德仅作官方基础数据备用，旧车来了直连为最终备用。数据仅供参考。" } }
       }
     },
     "settings.region.realtimeNotice" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "AMap does not provide realtime bus arrivals. ETA is delegated to a replaceable realtime provider; until an authorized feed is configured, the legacy compatibility feed may be used." } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "高德不提供實時公交到站；到站預報由可替換的實時數據源負責。配置授權數據前，可能使用非官方兼容數據源。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "高德不提供实时公交到站；到站预报由可替换的实时数据源负责。配置授权数据前，可能使用非官方兼容数据源。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Realtime ETA uses the CheLaile API primary. If it fails, the legacy direct API is used; AMap is never presented as realtime." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "實時到站由車來了 API 主接口提供；失敗時使用舊車來了直連後備，高德不會被標示為實時數據。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实时到站由车来了 API 主接口提供；失败时使用旧车来了直连备用，高德不会被标示为实时数据。" } }
       }
     },
     "settings.region.dataSource" : {
@@ -650,6 +657,13 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "AMAP_WEB_SERVICE_KEY is read from the generated Info.plist or process environment. It is never bundled as a source-code constant." } },
         "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "AMAP_WEB_SERVICE_KEY 會從生成的 Info.plist 或進程環境讀取，不會寫入源碼常量。" } },
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AMAP_WEB_SERVICE_KEY 会从生成的 Info.plist 或进程环境读取，不会写入源代码常量。" } }
+      }
+    },
+    "settings.region.chelaileAPI" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CHELAILE_API_BASE_URL and optional CHELAILE_API_KEY are read from generated Info.plist or process environment. The default is the hosted /v1 API; no key is bundled in source." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "CHELAILE_API_BASE_URL 及可選 CHELAILE_API_KEY 會從生成的 Info.plist 或進程環境讀取；預設使用託管 /v1 API，密鑰不會寫入源碼。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CHELAILE_API_BASE_URL 及可选 CHELAILE_API_KEY 会从生成的 Info.plist 或进程环境读取；默认使用托管 /v1 API，密钥不会写入源代码。" } }
       }
     },
     "settings.region.current" : {

@@ -54,7 +54,8 @@ final class DataStore {
     private(set) var directStopCompanies: [String: Set<String>] = [:]
 
     /// Entries synthesized at runtime by query-mode providers (for example
-    /// AMap base data or the legacy mainland fallback).
+    /// Hosted CheLaile API data, optional AMap base data, or the legacy
+    /// mainland fallback.
     private var syntheticEntries: [String: RouteEntry] = [:]
     private var syntheticStops: [String: StopEntry] = [:]
     private var syntheticMainlandMetadata: [String: MainlandRouteMetadata] = [:]

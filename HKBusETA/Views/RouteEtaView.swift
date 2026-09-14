@@ -313,10 +313,14 @@ struct RouteEtaView: View {
                 else {
                     throw MainlandProviderError.invalidRequest("Mainland route is missing a line or stop identifier.")
                 }
+                let stopLocation = app.data.stop(stopIDs[seq])?.location
                 result = try await mainland.fetchEtas(
                     lineID: lineID,
                     stopID: stopIDs[seq],
                     stopSequence: seq,
+                    latitude: stopLocation?.coordinateSystem == .wgs84 ? stopLocation?.lat : nil,
+                    longitude: stopLocation?.coordinateSystem == .wgs84 ? stopLocation?.lng : nil,
+                    source: mainlandMetadata?.source,
                     language: language,
                     modeHint: mainlandMetadata?.mode
                 )

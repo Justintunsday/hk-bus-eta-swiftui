@@ -27,6 +27,9 @@ private struct FallbackProbeProvider: MainlandTransitProvider {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double?,
+        longitude: Double?,
+        source: MainlandDataSource?,
         language: AppLanguage,
         modeHint: MainlandTransitMode?
     ) async throws -> [Eta] { [] }

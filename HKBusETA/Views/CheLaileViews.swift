@@ -197,6 +197,7 @@ struct MainlandStopBoardView: View {
 
     @State private var rows: [MainlandBoardLine] = []
     @State private var otherLines: [MainlandTransitLine] = []
+    @State private var resolvedLocation: StopLocation?
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -279,8 +280,8 @@ struct MainlandStopBoardView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                if let location, location.isValid {
-                    StopNavigationButton(stopName: L10n.display(title), location: location) {
+                if let navigationLocation, navigationLocation.isValid {
+                    StopNavigationButton(stopName: L10n.display(title), location: navigationLocation) {
                         Image(systemName: "map")
                     }
                 }
@@ -297,6 +298,9 @@ struct MainlandStopBoardView: View {
             let result = try await provider.stopBoard(stopID: stopID, namesakeStopID: namesakeStopID)
             rows = result.rows
             otherLines = result.otherLines
+            if let location = result.location {
+                resolvedLocation = location
+            }
             errorMessage = nil
         } catch is CancellationError {
             return
@@ -310,6 +314,10 @@ struct MainlandStopBoardView: View {
         let parts = text.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
         guard parts.count >= 3 else { return .gray }
         return Color(.sRGB, red: parts[0] / 255, green: parts[1] / 255, blue: parts[2] / 255)
+    }
+
+    private var navigationLocation: StopLocation? {
+        location ?? resolvedLocation
     }
 }
 

@@ -2,11 +2,10 @@ import Foundation
 
 /// App-facing mainland provider.
 ///
-/// AMap is the preferred base-data source when its key is configured. The
-/// legacy CheLaile provider remains an explicit fallback for missing keys and
-/// transient/unsupported AMap operations. ETA calls are routed through the
-/// replaceable MainlandRealtimeProvider boundary; until an authorized feed is
-/// supplied, the legacy compatibility provider is used as that fallback.
+/// The hosted CheLaile API is the mainland primary. AMap, when configured, is
+/// only an official base-data fallback; the old direct CheLaile provider is
+/// retained behind the fallback chain. ETA calls carry source and coordinate
+/// context so incompatible AMap IDs never reach the hosted realtime endpoint.
 struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
     private let router: any MainlandTransitProvider
     private let cityIdentifier: MainlandCityIdentifier
@@ -25,10 +24,19 @@ struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
             citycode: cityCode
         )
         let legacy = LegacyCheLaileProvider(cityId: cityCode, cityName: cityName)
-        let selectedRealtime: (any MainlandRealtimeProvider)? = realtime ?? legacy
+        let hosted = CheLaileAPIProvider(
+            cityId: cityCode,
+            cityName: cityName,
+            adcode: adcode
+        )
+        // The hosted API is the full-capability primary. Legacy direct
+        // CheLaile remains available to the router for service/upstream
+        // failures; the factory may put AMap between them for base data only.
+        let selectedRealtime: (any MainlandRealtimeProvider)? = realtime ?? hosted
         self.cityIdentifier = city
         self.stableID = "mainland-\(adcode ?? cityCode)"
-        self.router = MainlandProviderFactory.amapOrFallback(
+        self.router = MainlandProviderFactory.apiPrimaryOrAmapFallback(
+            primary: hosted,
             city: city,
             regionName: cityName,
             fallback: legacy,
@@ -93,6 +101,9 @@ struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
         lineID: String,
         stopID: String,
         stopSequence: Int?,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        source: MainlandDataSource? = nil,
         language: AppLanguage,
         modeHint: MainlandTransitMode?
     ) async throws -> [Eta] {
@@ -100,6 +111,9 @@ struct MainlandProviderStack: TransitProvider, MainlandTransitProvider {
             lineID: lineID,
             stopID: stopID,
             stopSequence: stopSequence,
+            latitude: latitude,
+            longitude: longitude,
+            source: source,
             language: language,
             modeHint: modeHint
         )
