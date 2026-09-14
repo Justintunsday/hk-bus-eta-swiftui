@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.3 (build 11)
+
+- Added simple transit-mode icons for other-region lines: mainland search
+  rows and route/ETA/recents/favorites now show a quiet bus or metro chip
+  when no operator logo exists.
+- Hong Kong ferry operators render a ferry glyph instead of a text name.
+
 ## 1.4.2 (build 10)
 
 - Rewrote the favorites page with region-grouped sections: the region is now
