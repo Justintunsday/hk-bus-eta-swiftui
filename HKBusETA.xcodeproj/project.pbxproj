@@ -42,6 +42,16 @@
 		DEADBEEF000000000000010A /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DEADBEEF0000000000000114 /* Exceptions for "HKBusETAWidgets" folder in "HKBusETAWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DEADBEEF0000000000000101 /* HKBusETAWidgets */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DEADBEEF0000000000000002 /* HKBusETA */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -50,6 +60,9 @@
 		};
 		DEADBEEF0000000000000103 /* HKBusETAWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DEADBEEF0000000000000114 /* Exceptions for "HKBusETAWidgets" folder in "HKBusETAWidgets" target */,
+			);
 			path = HKBusETAWidgets;
 			sourceTree = "<group>";
 		};
