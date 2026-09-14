@@ -55,7 +55,18 @@ struct FavoritesView: View {
             Section {
                 ForEach(section.items) { item in
                     NavigationLink(value: SavedRouteTarget(item)) {
-                        RouteFavoriteRow(item: item)
+                        RouteFavoriteRow(item: item, isPinned: isRoutePinned(item))
+                    }
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            toggleRoutePin(item)
+                        } label: {
+                            Label(
+                                isRoutePinned(item) ? L10n.t("widget.unpin") : L10n.t("widget.pin"),
+                                systemImage: isRoutePinned(item) ? "pin.slash" : "pin"
+                            )
+                        }
+                        .tint(DesignTokens.accent)
                     }
                 }
                 .onDelete { offsets in
@@ -77,7 +88,18 @@ struct FavoritesView: View {
             Section {
                 ForEach(section.items) { item in
                     NavigationLink(value: SavedStopTarget(item)) {
-                        StopFavoriteRow(item: item)
+                        StopFavoriteRow(item: item, isPinned: isStopPinned(item))
+                    }
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            toggleStopPin(item)
+                        } label: {
+                            Label(
+                                isStopPinned(item) ? L10n.t("widget.unpin") : L10n.t("widget.pin"),
+                                systemImage: isStopPinned(item) ? "pin.slash" : "pin"
+                            )
+                        }
+                        .tint(DesignTokens.accent)
                     }
                 }
                 .onDelete { offsets in
@@ -91,6 +113,40 @@ struct FavoritesView: View {
                 )
             }
         }
+    }
+
+    // MARK: Widget pins
+
+    private func isRoutePinned(_ item: RegionalFavoriteRoute) -> Bool {
+        WidgetSnapshotUpdater.isPinned(
+            id: WidgetSnapshotUpdater.routePinID(regionID: item.regionID, routeKey: item.favorite.routeKey)
+        )
+    }
+
+    private func isStopPinned(_ item: RegionalFavoriteStop) -> Bool {
+        WidgetSnapshotUpdater.isPinned(
+            id: WidgetSnapshotUpdater.stopPinID(regionID: item.regionID, stopID: item.favorite.id)
+        )
+    }
+
+    private func toggleRoutePin(_ item: RegionalFavoriteRoute) {
+        let recent = item.regionID == app.region.id
+            ? app.bookmarks.recentRoutes.first { $0.routeKey == item.favorite.routeKey }
+            : nil
+        WidgetSnapshotUpdater.toggleRoutePin(
+            regionID: item.regionID,
+            favorite: item.favorite,
+            recentStop: recent,
+            language: language
+        )
+    }
+
+    private func toggleStopPin(_ item: RegionalFavoriteStop) {
+        WidgetSnapshotUpdater.toggleStopPin(
+            regionID: item.regionID,
+            favorite: item.favorite,
+            language: language
+        )
     }
 
     private var emptyState: some View {
@@ -159,6 +215,7 @@ private struct FavoriteSectionHeader: View {
 private struct RouteFavoriteRow: View {
     @Environment(AppState.self) private var app
     let item: RegionalFavoriteRoute
+    var isPinned: Bool = false
 
     private var language: AppLanguage { L10n.language }
 
@@ -190,6 +247,12 @@ private struct RouteFavoriteRow: View {
                 .foregroundStyle(DesignTokens.textSecondary)
                 .lineLimit(1)
             }
+            Spacer(minLength: 0)
+            if isPinned {
+                Image(systemName: "pin.fill")
+                    .font(DesignTokens.footnote)
+                    .foregroundStyle(DesignTokens.textTertiary)
+            }
         }
         .padding(.vertical, DesignTokens.Spacing.xxs)
     }
@@ -197,13 +260,22 @@ private struct RouteFavoriteRow: View {
 
 private struct StopFavoriteRow: View {
     let item: RegionalFavoriteStop
+    var isPinned: Bool = false
 
     private var language: AppLanguage { L10n.language }
 
     var body: some View {
         let favorite = item.favorite
-        return Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
-            .font(DesignTokens.body)
-            .lineLimit(1)
+        return HStack(spacing: DesignTokens.Spacing.s) {
+            Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
+                .font(DesignTokens.body)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            if isPinned {
+                Image(systemName: "pin.fill")
+                    .font(DesignTokens.footnote)
+                    .foregroundStyle(DesignTokens.textTertiary)
+            }
+        }
     }
 }

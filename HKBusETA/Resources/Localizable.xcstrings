@@ -673,6 +673,20 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "当前地区" } }
       }
     },
+    "widget.pin" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pin to widget" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "加到小工具" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加到小组件" } }
+      }
+    },
+    "widget.unpin" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove from widget" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "移除小工具" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除小组件" } }
+      }
+    },
     "settings.language" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
