@@ -77,7 +77,7 @@ struct WidgetTransitAPIClient: Sendable {
             ("city_id", cityID),
             ("keyword", keyword),
         ])
-        return try decode(WidgetTransitSearchResponse.self, data: data)
+        return try Self.decode(WidgetTransitSearchResponse.self, data: data)
     }
 
     func lineDetail(cityID: String, lineID: String) async throws -> WidgetTransitLineDetailResponse {
@@ -85,7 +85,7 @@ struct WidgetTransitAPIClient: Sendable {
             ("city_id", cityID),
             ("line_id", lineID),
         ])
-        return try decode(WidgetTransitLineDetailResponse.self, data: data)
+        return try Self.decode(WidgetTransitLineDetailResponse.self, data: data)
     }
 
     func realtime(for target: WidgetTransitTargetRecord) async throws -> WidgetTransitRealtimeResponse {
@@ -103,7 +103,7 @@ struct WidgetTransitAPIClient: Sendable {
             ("lat", coordinateString(target.latitude)),
             ("lng", coordinateString(target.longitude)),
         ])
-        return try decode(WidgetTransitRealtimeResponse.self, data: data)
+        return try Self.decode(WidgetTransitRealtimeResponse.self, data: data)
     }
 
     static func makeURL(

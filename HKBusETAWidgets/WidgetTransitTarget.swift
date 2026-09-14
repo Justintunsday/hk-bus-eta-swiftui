@@ -134,7 +134,7 @@ enum WidgetTransitTargetID {
     private static let prefix = "wmbn-target-v1_"
 
     static func encode(_ target: WidgetTransitTargetRecord) -> String {
-        var encoder = JSONEncoder()
+        let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         guard let data = try? encoder.encode(target) else { return prefix + "invalid" }
         return prefix + data.base64EncodedString()
