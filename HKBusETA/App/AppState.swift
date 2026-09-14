@@ -47,6 +47,16 @@ final class AppState {
         apply(region)
     }
 
+    /// Opens a nationwide favorite in its owning transit system and keeps the
+    /// explicit selection stable instead of allowing auto-location to switch
+    /// regions while the destination is loading.
+    func openSavedRegion(_ regionID: String) {
+        guard RegionCatalog.region(for: regionID) != nil else { return }
+        settings.selectedRegionID = regionID
+        settings.persist()
+        selectRegion(regionID)
+    }
+
     /// In auto mode, resolves the region from the device location once known.
     func resolveAutoRegion(location: CLLocation?) {
         guard settings.selectedRegionID == RegionCatalog.autoID, let location else { return }

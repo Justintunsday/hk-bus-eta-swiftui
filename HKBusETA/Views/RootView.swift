@@ -6,8 +6,10 @@ struct RootView: View {
     var body: some View {
         TabView {
             SearchView()
+                .id(app.region.id)
                 .tabItem { Label(L10n.t("tab.search"), systemImage: "magnifyingglass") }
             NearbyView()
+                .id(app.region.id)
                 .tabItem { Label(L10n.t("tab.nearby"), systemImage: "location") }
             FavoritesView()
                 .tabItem { Label(L10n.t("tab.favorites"), systemImage: "star") }
@@ -15,7 +17,7 @@ struct RootView: View {
                 .tabItem { Label(L10n.t("tab.settings"), systemImage: "gearshape") }
         }
         .tint(DesignTokens.accent)
-        .id("\(app.region.id)-\(app.settings.language.rawValue)")
+        .id(app.settings.language.rawValue)
         .task {
             app.location.startUpdating()
             app.resolveAutoRegion(location: app.location.location)

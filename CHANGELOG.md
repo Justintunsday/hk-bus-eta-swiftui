@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.1 (build 8)
+
+- Favorites now aggregate routes and stops from every saved transit region,
+  with an explicit region label to prevent same-number services from mixing.
+- Opening an out-of-region favorite switches to its owning transit system
+  before resolving the route or station.
+- Restored recent routes and stations on empty search screens outside Hong
+  Kong, and persisted mainland line IDs so history survives app restarts.
+- Added compatibility recovery for mainland favorites and history created by
+  earlier versions that did not store a provider line ID.
+
 ## 1.4.0 (build 7)
 
 - Replaced the mainland primary source with the hosted CheLaile `/v1` API for

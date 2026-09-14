@@ -281,7 +281,11 @@ struct RouteEtaView: View {
     private func favoriteButton(_ entry: RouteEntry) -> some View {
         let isFavorite = app.bookmarks.isFavoriteRoute(routeKey)
         return Button {
-            app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: routeKey)
+            app.bookmarks.toggleFavoriteRoute(
+                entry: entry,
+                routeKey: routeKey,
+                modeRawValue: app.data.mainlandMetadata(for: routeKey)?.mode.rawValue
+            )
         } label: {
             Image(systemName: isFavorite ? "star.fill" : "star")
         }
@@ -291,7 +295,14 @@ struct RouteEtaView: View {
     private func recordRecent(_ entry: RouteEntry) {
         let stops = entry.canonicalStops
         guard seq >= 0, seq < stops.count, let stop = app.data.stop(stops[seq]) else { return }
-        app.bookmarks.recordRecentRoute(entry: entry, routeKey: routeKey, stopId: stops[seq], seq: seq, stopName: stop.name)
+        app.bookmarks.recordRecentRoute(
+            entry: entry,
+            routeKey: routeKey,
+            stopId: stops[seq],
+            seq: seq,
+            stopName: stop.name,
+            modeRawValue: app.data.mainlandMetadata(for: routeKey)?.mode.rawValue
+        )
     }
 
     private func refresh() async {

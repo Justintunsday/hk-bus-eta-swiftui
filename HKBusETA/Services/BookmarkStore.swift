@@ -13,6 +13,35 @@ struct FavoriteRoute: Codable, Identifiable, Hashable, Sendable {
     let destZh: String
     let destEn: String
     let createdAt: Date
+    /// Query-mode mainland routes are recreated after launch from this ID.
+    let lineID: String?
+    let modeRawValue: String?
+
+    init(
+        routeKey: String,
+        route: String,
+        serviceType: String,
+        co: [String],
+        origZh: String,
+        origEn: String,
+        destZh: String,
+        destEn: String,
+        createdAt: Date,
+        lineID: String? = nil,
+        modeRawValue: String? = nil
+    ) {
+        self.routeKey = routeKey
+        self.route = route
+        self.serviceType = serviceType
+        self.co = co
+        self.origZh = origZh
+        self.origEn = origEn
+        self.destZh = destZh
+        self.destEn = destEn
+        self.createdAt = createdAt
+        self.lineID = lineID
+        self.modeRawValue = modeRawValue
+    }
 }
 
 struct FavoriteStop: Codable, Identifiable, Hashable, Sendable {
@@ -38,6 +67,40 @@ struct RecentRoute: Codable, Identifiable, Hashable, Sendable {
     let stopNameZh: String
     let stopNameEn: String
     let viewedAt: Date
+    let lineID: String?
+    let modeRawValue: String?
+
+    init(
+        routeKey: String,
+        route: String,
+        co: [String],
+        origZh: String,
+        origEn: String,
+        destZh: String,
+        destEn: String,
+        stopId: String,
+        seq: Int,
+        stopNameZh: String,
+        stopNameEn: String,
+        viewedAt: Date,
+        lineID: String? = nil,
+        modeRawValue: String? = nil
+    ) {
+        self.routeKey = routeKey
+        self.route = route
+        self.co = co
+        self.origZh = origZh
+        self.origEn = origEn
+        self.destZh = destZh
+        self.destEn = destEn
+        self.stopId = stopId
+        self.seq = seq
+        self.stopNameZh = stopNameZh
+        self.stopNameEn = stopNameEn
+        self.viewedAt = viewedAt
+        self.lineID = lineID
+        self.modeRawValue = modeRawValue
+    }
 }
 
 struct RecentStop: Codable, Identifiable, Hashable, Sendable {
@@ -47,6 +110,18 @@ struct RecentStop: Codable, Identifiable, Hashable, Sendable {
     let lat: Double
     let lng: Double
     let viewedAt: Date
+}
+
+struct RegionalFavoriteRoute: Identifiable, Hashable, Sendable {
+    var id: String { "\(regionID)#\(favorite.routeKey)" }
+    let regionID: String
+    let favorite: FavoriteRoute
+}
+
+struct RegionalFavoriteStop: Identifiable, Hashable, Sendable {
+    var id: String { "\(regionID)#\(favorite.id)" }
+    let regionID: String
+    let favorite: FavoriteStop
 }
 
 @MainActor
@@ -63,6 +138,22 @@ final class BookmarkStore {
     var favoriteStops: [FavoriteStop] { current.favoriteStops }
     var recentRoutes: [RecentRoute] { current.recentRoutes }
     var recentStops: [RecentStop] { current.recentStops }
+
+    /// Favorites are displayed globally while writes and identity checks stay
+    /// isolated in their original transit-region namespace.
+    var allFavoriteRoutes: [RegionalFavoriteRoute] {
+        regions.flatMap { regionID, payload in
+            payload.favoriteRoutes.map { RegionalFavoriteRoute(regionID: regionID, favorite: $0) }
+        }
+        .sorted { $0.favorite.createdAt > $1.favorite.createdAt }
+    }
+
+    var allFavoriteStops: [RegionalFavoriteStop] {
+        regions.flatMap { regionID, payload in
+            payload.favoriteStops.map { RegionalFavoriteStop(regionID: regionID, favorite: $0) }
+        }
+        .sorted { $0.favorite.createdAt > $1.favorite.createdAt }
+    }
 
     private let maxRecent = 50
 
@@ -96,7 +187,7 @@ final class BookmarkStore {
         current.favoriteRoutes.contains { $0.routeKey == routeKey }
     }
 
-    func toggleFavoriteRoute(entry: RouteEntry, routeKey: String) {
+    func toggleFavoriteRoute(entry: RouteEntry, routeKey: String, modeRawValue: String? = nil) {
         updateCurrent { bucket in
             if let index = bucket.favoriteRoutes.firstIndex(where: { $0.routeKey == routeKey }) {
                 bucket.favoriteRoutes.remove(at: index)
@@ -111,7 +202,9 @@ final class BookmarkStore {
                         origEn: entry.orig.en,
                         destZh: entry.dest.zh,
                         destEn: entry.dest.en,
-                        createdAt: Date()
+                        createdAt: Date(),
+                        lineID: entry.gtfsId?.value,
+                        modeRawValue: modeRawValue
                     ),
                     at: 0
                 )
@@ -121,6 +214,15 @@ final class BookmarkStore {
 
     func removeFavoriteRoutes(at offsets: IndexSet) {
         updateCurrent { $0.favoriteRoutes.remove(atOffsets: offsets) }
+    }
+
+    func removeFavoriteRoutes(_ favorites: [RegionalFavoriteRoute]) {
+        for item in favorites {
+            guard var payload = regions[item.regionID] else { continue }
+            payload.favoriteRoutes.removeAll { $0.routeKey == item.favorite.routeKey }
+            regions[item.regionID] = payload
+        }
+        save()
     }
 
     func isFavoriteStop(_ stopId: String) -> Bool {
@@ -151,9 +253,25 @@ final class BookmarkStore {
         updateCurrent { $0.favoriteStops.remove(atOffsets: offsets) }
     }
 
+    func removeFavoriteStops(_ favorites: [RegionalFavoriteStop]) {
+        for item in favorites {
+            guard var payload = regions[item.regionID] else { continue }
+            payload.favoriteStops.removeAll { $0.id == item.favorite.id }
+            regions[item.regionID] = payload
+        }
+        save()
+    }
+
     // MARK: - Recents
 
-    func recordRecentRoute(entry: RouteEntry, routeKey: String, stopId: String, seq: Int, stopName: Terminal) {
+    func recordRecentRoute(
+        entry: RouteEntry,
+        routeKey: String,
+        stopId: String,
+        seq: Int,
+        stopName: Terminal,
+        modeRawValue: String? = nil
+    ) {
         updateCurrent { bucket in
             bucket.recentRoutes.removeAll { $0.routeKey == routeKey && $0.seq == seq }
             bucket.recentRoutes.insert(
@@ -169,7 +287,9 @@ final class BookmarkStore {
                     seq: seq,
                     stopNameZh: stopName.zh,
                     stopNameEn: stopName.en,
-                    viewedAt: Date()
+                    viewedAt: Date(),
+                    lineID: entry.gtfsId?.value,
+                    modeRawValue: modeRawValue
                 ),
                 at: 0
             )

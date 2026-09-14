@@ -158,7 +158,11 @@ struct RouteDetailView: View {
     private func favoriteButton(_ entry: RouteEntry) -> some View {
         let isFavorite = app.bookmarks.isFavoriteRoute(routeKey)
         return Button {
-            app.bookmarks.toggleFavoriteRoute(entry: entry, routeKey: routeKey)
+            app.bookmarks.toggleFavoriteRoute(
+                entry: entry,
+                routeKey: routeKey,
+                modeRawValue: app.data.mainlandMetadata(for: routeKey)?.mode.rawValue
+            )
         } label: {
             Image(systemName: isFavorite ? "star.fill" : "star")
         }

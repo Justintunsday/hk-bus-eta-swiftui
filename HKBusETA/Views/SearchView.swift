@@ -51,6 +51,12 @@ struct SearchView: View {
                     location: target.location
                 )
             }
+            .navigationDestination(for: SavedRouteTarget.self) { target in
+                SavedRouteDestination(target: target)
+            }
+            .navigationDestination(for: SavedStopTarget.self) { target in
+                SavedStopDestination(target: target)
+            }
         }
         .searchable(text: $query, prompt: Text(L10n.t("search.placeholder")))
         .searchScopes($filter, activation: .onSearchPresentation) {
@@ -65,10 +71,10 @@ struct SearchView: View {
 
     @ViewBuilder
     private var content: some View {
-        if app.mainlandProvider != nil {
-            mainlandContent
-        } else if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             recentContent
+        } else if app.mainlandProvider != nil {
+            mainlandContent
         } else if routeKeys.isEmpty && stops.isEmpty {
             ContentUnavailableView {
                 Label(L10n.t("search.noResults"), systemImage: "magnifyingglass")
@@ -185,7 +191,10 @@ struct SearchView: View {
                 if !app.bookmarks.recentRoutes.isEmpty {
                     Section(L10n.t("search.recent.routes")) {
                         ForEach(app.bookmarks.recentRoutes) { recent in
-                            NavigationLink(value: RouteEtaTarget(routeKey: recent.routeKey, seq: recent.seq)) {
+                            NavigationLink(value: SavedRouteTarget(
+                                regionID: app.bookmarks.activeRegionID,
+                                recent: recent
+                            )) {
                                 HStack(spacing: 12) {
                                     RouteBadge(route: recent.route, entry: app.data.entry(recent.routeKey))
                                     VStack(alignment: .leading, spacing: 2) {
@@ -207,7 +216,10 @@ struct SearchView: View {
                 if !app.bookmarks.recentStops.isEmpty {
                     Section(L10n.t("search.recent.stops")) {
                         ForEach(app.bookmarks.recentStops) { recent in
-                            NavigationLink(value: StopTarget(stopId: recent.id)) {
+                            NavigationLink(value: SavedStopTarget(
+                                regionID: app.bookmarks.activeRegionID,
+                                recent: recent
+                            )) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(language.isChinese ? L10n.display(recent.nameZh) : recent.nameEn)
                                     if let count = routeCount(recent.id) {

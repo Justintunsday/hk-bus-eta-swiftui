@@ -41,6 +41,10 @@ struct BookmarkRegionSelfTest {
             seq: 0,
             stopName: Terminal(en: "Stop", zh: "车站")
         )
+        precondition(store.allFavoriteRoutes.count == 2)
+        precondition(Set(store.allFavoriteRoutes.map(\.regionID)) == Set(["hk", "cl-014"]))
+        precondition(store.allFavoriteStops.count == 2)
+        precondition(store.recentRoutes.first?.lineID == "fixture-line")
 
         store.selectRegion("hk")
         precondition(store.favoriteRoutes.count == 1)
@@ -58,6 +62,11 @@ struct BookmarkRegionSelfTest {
         reloaded.selectRegion("cl-014")
         precondition(reloaded.favoriteRoutes.count == 1)
         precondition(reloaded.favoriteStops.count == 1)
+        precondition(reloaded.allFavoriteRoutes.count == 1)
+
+        let savedStop = reloaded.allFavoriteStops.first!
+        reloaded.removeFavoriteStops([savedStop])
+        precondition(reloaded.allFavoriteStops.isEmpty)
 
         try verifyLegacyMigration(in: directory)
         print("BOOKMARK REGION SELF-TEST OK")
@@ -104,7 +113,7 @@ struct BookmarkRegionSelfTest {
             serviceType: FlexibleString("1"),
             stops: ["fixture": ["shared-stop"]],
             bound: [:],
-            gtfsId: nil,
+            gtfsId: FlexibleString("fixture-line"),
             nlbId: nil
         )
     }

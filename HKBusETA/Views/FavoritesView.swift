@@ -4,11 +4,13 @@ struct FavoritesView: View {
     @Environment(AppState.self) private var app
 
     private var language: AppLanguage { L10n.language }
+    private var favoriteRoutes: [RegionalFavoriteRoute] { app.bookmarks.allFavoriteRoutes }
+    private var favoriteStops: [RegionalFavoriteStop] { app.bookmarks.allFavoriteStops }
 
     var body: some View {
         NavigationStack {
-            DataGate {
-                if app.bookmarks.favoriteRoutes.isEmpty && app.bookmarks.favoriteStops.isEmpty {
+            Group {
+                if favoriteRoutes.isEmpty && favoriteStops.isEmpty {
                     ContentUnavailableView {
                         Label(L10n.t("favorites.empty.title"), systemImage: "star")
                     } description: {
@@ -16,32 +18,32 @@ struct FavoritesView: View {
                     }
                 } else {
                     List {
-                        if !app.bookmarks.favoriteRoutes.isEmpty {
+                        if !favoriteRoutes.isEmpty {
                             Section(L10n.t("favorites.routes")) {
-                                ForEach(app.bookmarks.favoriteRoutes) { favorite in
-                                    NavigationLink(value: RouteDetailTarget(routeKey: favorite.routeKey)) {
-                                        routeRow(favorite)
+                                ForEach(favoriteRoutes) { item in
+                                    NavigationLink(value: SavedRouteTarget(item)) {
+                                        routeRow(item)
                                     }
                                 }
-                                .onDelete { app.bookmarks.removeFavoriteRoutes(at: $0) }
+                                .onDelete { offsets in
+                                    app.bookmarks.removeFavoriteRoutes(offsets.map { favoriteRoutes[$0] })
+                                }
                             }
                         }
-                        if !app.bookmarks.favoriteStops.isEmpty {
+                        if !favoriteStops.isEmpty {
                             Section(L10n.t("favorites.stops")) {
-                                ForEach(app.bookmarks.favoriteStops) { favorite in
-                                    NavigationLink(value: StopTarget(stopId: favorite.id)) {
+                                ForEach(favoriteStops) { item in
+                                    NavigationLink(value: SavedStopTarget(item)) {
                                         VStack(alignment: .leading, spacing: 2) {
+                                            let favorite = item.favorite
                                             Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
-                                            let count = app.data.routeCount(at: favorite.id)
-                                            if count > 0 {
-                                                Text("\(count) \(L10n.t("unit.routes"))")
-                                                    .font(.caption)
-                                                    .foregroundStyle(.secondary)
-                                            }
+                                            regionLabel(item.regionID)
                                         }
                                     }
                                 }
-                                .onDelete { app.bookmarks.removeFavoriteStops(at: $0) }
+                                .onDelete { offsets in
+                                    app.bookmarks.removeFavoriteStops(offsets.map { favoriteStops[$0] })
+                                }
                             }
                         }
                     }
@@ -57,12 +59,22 @@ struct FavoritesView: View {
             .navigationDestination(for: StopTarget.self) { target in
                 StopEtaView(stopId: target.stopId)
             }
+            .navigationDestination(for: SavedRouteTarget.self) { target in
+                SavedRouteDestination(target: target)
+            }
+            .navigationDestination(for: SavedStopTarget.self) { target in
+                SavedStopDestination(target: target)
+            }
         }
     }
 
-    private func routeRow(_ favorite: FavoriteRoute) -> some View {
+    private func routeRow(_ item: RegionalFavoriteRoute) -> some View {
+        let favorite = item.favorite
         HStack(spacing: 12) {
-            RouteBadge(route: favorite.route, entry: app.data.entry(favorite.routeKey))
+            RouteBadge(
+                route: favorite.route,
+                entry: item.regionID == app.region.id ? app.data.entry(favorite.routeKey) : nil
+            )
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(favorite.destZh) : favorite.destEn)")
                     .lineLimit(1)
@@ -74,8 +86,15 @@ struct FavoritesView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                regionLabel(item.regionID)
             }
         }
         .padding(.vertical, 2)
+    }
+
+    private func regionLabel(_ regionID: String) -> some View {
+        Label(RegionCatalog.region(for: regionID)?.name ?? regionID, systemImage: "mappin.and.ellipse")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
     }
 }
