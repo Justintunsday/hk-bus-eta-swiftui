@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.2 (build 10)
+
+- Rewrote the favorites page with region-grouped sections: the region is now
+  the section header (pin + kind + region + count) instead of a cramped
+  third-line caption inside every row.
+- Rows now show only destination, origin and operator logos with a clear
+  typographic hierarchy; groups follow catalog order (Hong Kong first) and
+  newest-first inside each group.
+- Applied the swiftui-design-skill Warm Minimal pass to the favorites screen
+  (design tokens, 8pt rhythm, one signature organising element).
+
 ## 1.4.1 (build 9)
 
 - Updated the mainland integration to the documented hosted CheLaile API:
