@@ -203,7 +203,12 @@ struct SearchView: View {
                                         HStack(spacing: 6) {
                                             Text(language.isChinese ? L10n.display(recent.stopNameZh) : recent.stopNameEn)
                                                 .lineLimit(1)
-                                            CompanyLogos(co: app.data.entry(recent.routeKey)?.co ?? recent.co, language: language, height: 12)
+                                            CompanyLogos(
+                                                co: app.data.entry(recent.routeKey)?.co ?? recent.co,
+                                                language: language,
+                                                height: 12,
+                                                mode: app.data.mainlandMetadata(for: recent.routeKey)?.mode
+                                            )
                                         }
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
@@ -306,13 +311,13 @@ struct MainlandLineRow: View {
                     .font(.body)
                     .fontWeight(.medium)
                     .lineLimit(1)
-                HStack(spacing: 4) {
-                    if hit.mode == .metro {
-                        Text(L10n.t("mainland.metros"))
-                            .font(.caption2)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color(uiColor: .secondarySystemBackground), in: Capsule())
+                HStack(spacing: 6) {
+                    if let symbol = hit.mode.symbolName {
+                        RouteModeIcon(
+                            symbolName: symbol,
+                            size: 11,
+                            label: hit.mode == .metro ? L10n.t("mainland.metros") : nil
+                        )
                     }
                     Text(hit.origin)
                         .font(.caption)

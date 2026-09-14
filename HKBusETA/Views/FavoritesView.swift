@@ -177,7 +177,14 @@ private struct RouteFavoriteRow: View {
                 HStack(spacing: DesignTokens.Spacing.xs + 2) {
                     Text(language.isChinese ? L10n.display(favorite.origZh) : favorite.origEn)
                     Text("·")
-                    CompanyLogos(co: favorite.co, language: language, height: 13)
+                    CompanyLogos(
+                        co: favorite.co,
+                        language: language,
+                        height: 13,
+                        mode: item.regionID == app.region.id
+                            ? app.data.mainlandMetadata(for: favorite.routeKey)?.mode
+                            : nil
+                    )
                 }
                 .font(DesignTokens.caption)
                 .foregroundStyle(DesignTokens.textSecondary)

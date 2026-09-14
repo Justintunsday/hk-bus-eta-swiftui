@@ -81,7 +81,12 @@ struct RouteEtaView: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.s) {
             HStack(spacing: 10) {
                 RouteBadge(route: entry.route, entry: entry, fontSize: 20)
-                CompanyLogos(co: entry.co, language: language, height: 18)
+                CompanyLogos(
+                    co: entry.co,
+                    language: language,
+                    height: 18,
+                    mode: app.data.mainlandMetadata(for: entry.routeKey)?.mode
+                )
                 if entry.isSpecialTrip {
                     Text(L10n.t("route.special"))
                         .font(.caption2)
