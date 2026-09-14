@@ -66,7 +66,8 @@ struct BookmarkRegionSelfTest {
 
         let savedStop = reloaded.allFavoriteStops.first!
         reloaded.removeFavoriteStops([savedStop])
-        precondition(reloaded.allFavoriteStops.isEmpty)
+        precondition(reloaded.allFavoriteStops.count == 1)
+        precondition(reloaded.allFavoriteStops.first?.regionID != savedStop.regionID)
 
         try verifyLegacyMigration(in: directory)
         print("BOOKMARK REGION SELF-TEST OK")
