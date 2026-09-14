@@ -66,6 +66,14 @@ enum WidgetTransitQueryParser {
     }
 }
 
+/// The values used by the manual App Intent configuration. Keeping the
+/// direction as the API's numeric value makes the configuration independent
+/// of localized display text.
+enum WidgetTransitManualDirection {
+    static let outbound = 0
+    static let inbound = 1
+}
+
 /// All information needed to render and refresh one route/station target.
 ///
 /// `id` is a versioned, URL-safe JSON payload. It is deliberately not a

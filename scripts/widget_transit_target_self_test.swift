@@ -95,12 +95,50 @@ struct WidgetTransitTargetSelfTest {
         precondition(foshanTargets.allSatisfy { $0.cityID == "019" && $0.cityName == "佛山" })
         precondition(foshanTargets.contains { $0.direction == 1 && $0.destination == "禅城" })
 
+        let foshanOutbound = await resolver.target(
+            for: WidgetTransitCityCatalog.all.first { $0.id == "019" }!,
+            route: "352",
+            direction: WidgetTransitManualDirection.outbound,
+            stop: nil
+        )
+        precondition(
+            foshanOutbound?.cityID == "019"
+                && foshanOutbound?.direction == WidgetTransitManualDirection.outbound
+                && foshanOutbound?.stopName == "起点",
+            "an empty stop selects the first stop in the selected direction"
+        )
+
+        let foshanInboundStop = await resolver.target(
+            for: WidgetTransitCityCatalog.all.first { $0.id == "019" }!,
+            route: "352",
+            direction: WidgetTransitManualDirection.inbound,
+            stop: "季华园"
+        )
+        precondition(
+            foshanInboundStop?.cityID == "019"
+                && foshanInboundStop?.direction == WidgetTransitManualDirection.inbound
+                && foshanInboundStop?.stopName == "季华园",
+            "manual stop selection must stay within the selected direction"
+        )
+
         let shanghaiTargets = await resolver.targets(for: "上海 71 人民广场")
         precondition(!shanghaiTargets.isEmpty)
         precondition(shanghaiTargets.allSatisfy {
             $0.cityID == "034" && $0.cityName == "上海" && $0.lineName == "71" && $0.stopName == "人民广场"
         })
         precondition(shanghaiTargets.allSatisfy { $0.stopID == $0.stationID }, "sId must cover missing physicalStId")
+        let shanghaiInbound = await resolver.target(
+            for: WidgetTransitCityCatalog.all.first { $0.id == "034" }!,
+            route: "71",
+            direction: WidgetTransitManualDirection.inbound,
+            stop: nil
+        )
+        precondition(
+            shanghaiInbound?.cityID == "034"
+                && shanghaiInbound?.direction == WidgetTransitManualDirection.inbound
+                && shanghaiInbound?.stopName == "起点",
+            "manual resolution must isolate the selected city ID"
+        )
         let etaResult = await resolver.etaDates(for: record)
         precondition(etaResult.unavailable == false && etaResult.dates.count == 1)
 

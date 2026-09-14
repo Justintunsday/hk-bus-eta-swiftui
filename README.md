@@ -1,4 +1,4 @@
-# Where My Bus Now (WMBN) · 1.7.0
+# Where My Bus Now (WMBN) · 1.7.1
 
 ![Build](https://github.com/Justintunsday/where-my-bus-now/actions/workflows/build.yml/badge.svg)
 
@@ -32,9 +32,11 @@ official base data when configured. This is not an official app.
   live countdowns for the next arrival (pin favorites from the Favorites
   page; up to three pins)
 - **SideStore-compatible Route & stop widget**: one searchable AppEntity accepts
-  a city-prefixed query such as `佛山 352` or `上海 71 人民广场`, carries its
-  city ID/name, route direction and station in a self-contained ID, and calls
-  the hosted API directly without App Group sharing or location
+  a city-prefixed query such as `佛山 352` or `上海 71 人民广场`; manual fields
+  also accept a city, route, direction and optional stop when the picker has no
+  options. The widget carries its city ID/name, route direction and station in
+  a self-contained ID, and calls the hosted API directly without App Group
+  sharing or location
 - Nearby stops with distance, favorites for whole routes and stops, recents
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English

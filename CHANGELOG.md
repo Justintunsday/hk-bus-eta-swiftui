@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.1 (build 17)
+
+- Added manual SideStore widget configuration fields for city, route, direction
+  and optional stop, so configuration works even when the searchable target
+  picker reports “No options available”. The selected city ID is preserved
+  through resolution and an empty stop selects the first stop in that direction.
+- Added offline coverage for manual target resolution and direction filtering.
+
 ## 1.7.0 (build 16)
 
 - Added a SideStore-compatible “Route & stop” widget with one searchable

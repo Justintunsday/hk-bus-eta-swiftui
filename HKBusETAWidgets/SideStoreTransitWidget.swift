@@ -44,14 +44,78 @@ struct WidgetTransitTargetQuery: EntityStringQuery, Sendable {
     func suggestedEntities() async throws -> [WidgetTransitTargetEntity] { [] }
 }
 
+enum WidgetTransitCityOption: String, AppEnum, Sendable {
+    case shenzhen = "014"
+    case guangzhou = "040"
+    case shanghai = "034"
+    case beijing = "027"
+    case tianjin = "006"
+    case chongqing = "003"
+    case chengdu = "007"
+    case foshan = "019"
+    case qingdao = "009"
+    case shenyang = "035"
+    case nanjing = "018"
+    case xian = "076"
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "城市 / City"
+    static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
+        .shenzhen: DisplayRepresentation(title: "深圳", subtitle: "城市 ID 014 / City ID 014"),
+        .guangzhou: DisplayRepresentation(title: "广州", subtitle: "城市 ID 040 / City ID 040"),
+        .shanghai: DisplayRepresentation(title: "上海", subtitle: "城市 ID 034 / City ID 034"),
+        .beijing: DisplayRepresentation(title: "北京", subtitle: "城市 ID 027 / City ID 027"),
+        .tianjin: DisplayRepresentation(title: "天津", subtitle: "城市 ID 006 / City ID 006"),
+        .chongqing: DisplayRepresentation(title: "重庆", subtitle: "城市 ID 003 / City ID 003"),
+        .chengdu: DisplayRepresentation(title: "成都", subtitle: "城市 ID 007 / City ID 007"),
+        .foshan: DisplayRepresentation(title: "佛山", subtitle: "城市 ID 019 / City ID 019"),
+        .qingdao: DisplayRepresentation(title: "青岛", subtitle: "城市 ID 009 / City ID 009"),
+        .shenyang: DisplayRepresentation(title: "沈阳", subtitle: "城市 ID 035 / City ID 035"),
+        .nanjing: DisplayRepresentation(title: "南京", subtitle: "城市 ID 018 / City ID 018"),
+        .xian: DisplayRepresentation(title: "西安", subtitle: "城市 ID 076 / City ID 076"),
+    ]
+
+    var city: WidgetTransitCity {
+        WidgetTransitCityCatalog.all.first { $0.id == rawValue }!
+    }
+}
+
+enum WidgetTransitDirectionOption: String, AppEnum, Sendable {
+    case outbound = "0"
+    case inbound = "1"
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "方向 / Direction"
+    static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
+        .outbound: DisplayRepresentation(title: "上行 / Outbound", subtitle: "方向 0 / Direction 0"),
+        .inbound: DisplayRepresentation(title: "下行 / Inbound", subtitle: "方向 1 / Direction 1"),
+    ]
+
+    var apiValue: Int { Int(rawValue)! }
+}
+
 struct SelectSideStoreTransitTargetIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "线路与车站 / Route & stop"
     static var description = IntentDescription(
-        "输入城市、线路和车站，例如“佛山 352”或“上海 71 人民广场”。 / Search with a city, route and optional stop, such as “佛山 352” or “上海 71 人民广场”."
+        "选择目标，或填写手动字段：城市、线路、方向和可选站名。若目标显示 No options available，请使用手动字段。 / Choose a target, or fill the manual city, route, direction and optional stop fields when the target shows No options available."
     )
 
-    @Parameter(title: "线路与车站 / Route & stop")
+    @Parameter(title: "可搜索目标（可选） / Searchable target (optional)")
     var target: WidgetTransitTargetEntity?
+
+    @Parameter(title: "城市（手动） / Manual city")
+    var city: WidgetTransitCityOption?
+
+    @Parameter(title: "线路（必填） / Route (required)")
+    var route: String = ""
+
+    @Parameter(title: "方向（必填） / Direction (required)")
+    var direction: WidgetTransitDirectionOption = .outbound
+
+    @Parameter(title: "站名（可选） / Stop (optional)")
+    var stop: String = ""
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Target \(\.$target), or manual city \(\.$city), route \(\.$route), direction \(\.$direction), stop \(\.$stop)")
+    }
 }
 
 struct SideStoreTransitEntry: TimelineEntry {
@@ -103,7 +167,7 @@ struct SideStoreTransitProvider: AppIntentTimelineProvider {
         for configuration: SelectSideStoreTransitTargetIntent,
         in context: Context
     ) async -> Timeline<SideStoreTransitEntry> {
-        let target = configuration.target?.record
+        let target = await resolvedTarget(for: configuration)
         guard let target else {
             let now = Date()
             return Timeline(
@@ -120,6 +184,23 @@ struct SideStoreTransitProvider: AppIntentTimelineProvider {
         return Timeline(
             entries: [entry(for: target, etas: result.dates, status: status)],
             policy: .after(now.addingTimeInterval(900))
+        )
+    }
+
+    private func resolvedTarget(
+        for configuration: SelectSideStoreTransitTargetIntent
+    ) async -> WidgetTransitTargetRecord? {
+        if let target = configuration.target?.record {
+            return target
+        }
+        guard let city = configuration.city,
+              !configuration.route.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return nil }
+        return await WidgetTransitTargetResolver().target(
+            for: city.city,
+            route: configuration.route,
+            direction: configuration.direction.apiValue,
+            stop: configuration.stop
         )
     }
 
@@ -142,7 +223,7 @@ struct SideStoreTransitWidget: Widget {
             SideStoreTransitWidgetView(entry: entry)
         }
         .configurationDisplayName("线路与车站 / Route & stop")
-        .description("不依赖 App Group 的城市线路到站小组件。 / A city route ETA widget that does not require App Group.")
+        .description("填写城市、线路、方向和可选站名；若目标没有选项，请使用手动字段。 / Enter a city, route, direction and optional stop; use the manual fields if no target options are available.")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
@@ -196,13 +277,14 @@ struct SideStoreTransitWidgetView: View {
             }
         } else {
             VStack(spacing: 4) {
-                Image(systemName: "magnifyingglass")
+                Image(systemName: "slider.horizontal.3")
                     .font(.caption)
-                Text(WidgetL10n.t("搜尋城市、線路與車站", "Search city, route & stop"))
+                Text(WidgetL10n.t("請填寫城市、線路和方向", "Enter city, route & direction"))
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .multilineTextAlignment(.center)
-                Text(WidgetL10n.t("例如：佛山 352", "Example: Foshan 352"))
+                Text(WidgetL10n.t("站名可留空；若目標顯示 No options available，請使用手動欄位", "Stop is optional; use the manual fields if the target shows No options available"))
                     .font(.caption2)
+                    .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
             }
         }

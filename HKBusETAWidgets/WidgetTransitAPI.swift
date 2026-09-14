@@ -420,6 +420,53 @@ struct WidgetTransitTargetResolver: Sendable {
 
     func targets(for input: String) async -> [WidgetTransitTargetRecord] {
         guard let query = WidgetTransitQueryParser.parse(input) else { return [] }
+        return await targets(for: query)
+    }
+
+    /// Resolves the manual widget fields without relying on AppEntity query
+    /// suggestions. The selected city is carried into the query directly and
+    /// is checked again on the result so a response from another city cannot
+    /// become a target for this configuration.
+    func target(
+        for city: WidgetTransitCity,
+        route: String,
+        direction: Int,
+        stop: String?
+    ) async -> WidgetTransitTargetRecord? {
+        let route = clean(route)
+        let stop = clean(stop)
+        guard let route,
+              direction == WidgetTransitManualDirection.outbound
+                || direction == WidgetTransitManualDirection.inbound
+        else { return nil }
+
+        var keywordParts = [route]
+        if let stop {
+            keywordParts.append(stop)
+        }
+        let keyword = keywordParts.joined(separator: " ")
+        let records = await targets(
+            for: WidgetTransitParsedQuery(city: city, keyword: keyword)
+        )
+        let directionRecords = records.filter {
+            $0.cityID == city.id && $0.direction == direction
+        }
+        guard !directionRecords.isEmpty else { return nil }
+
+        // `targets(for:)` already applies the stop hint. Keeping this explicit
+        // also protects this API if the search/detail implementation changes.
+        if let stop {
+            let foldedStop = WidgetTransitQueryParser.folded(stop)
+            return directionRecords.first {
+                WidgetTransitQueryParser.folded($0.stopName).contains(foldedStop)
+            }
+        }
+        // Detail stations are sorted by sequence, so the first match is the
+        // first stop in the selected direction.
+        return directionRecords.first
+    }
+
+    private func targets(for query: WidgetTransitParsedQuery) async -> [WidgetTransitTargetRecord] {
         guard var response = try? await client.search(cityID: query.city.id, keyword: query.keyword) else {
             return []
         }
