@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(AppState.self) private var app
     @State private var isRefreshing = false
     @State private var appGroupIsOperational: Bool?
+    @State private var widgetLastAccess: Date?
 
     var body: some View {
         NavigationStack {
@@ -19,6 +20,23 @@ struct SettingsView: View {
                         }
                     } label: {
                         Text(L10n.t("settings.region"))
+                    }
+                    LabeledContent(L10n.t("settings.widget.extensionAccess")) {
+                        if let widgetLastAccess {
+                            Label(
+                                widgetLastAccess.formatted(date: .omitted, time: .shortened),
+                                systemImage: "checkmark.circle.fill"
+                            )
+                            .font(DesignTokens.captionMedium)
+                            .foregroundStyle(DesignTokens.success)
+                        } else {
+                            Label(
+                                L10n.t("settings.widget.extensionWaiting"),
+                                systemImage: "clock"
+                            )
+                            .font(DesignTokens.captionMedium)
+                            .foregroundStyle(DesignTokens.warning)
+                        }
                     }
                     LabeledContent(L10n.t("settings.region.current"), value: app.region.name)
                     if app.region.isQueryMode {
@@ -157,5 +175,11 @@ struct SettingsView: View {
 
     private func checkAppGroup() {
         appGroupIsOperational = WidgetSharedStore.appGroupIsOperational()
+        widgetLastAccess = WidgetSharedStore.widgetLastAccess
+        WidgetSnapshotUpdater.reload()
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            widgetLastAccess = WidgetSharedStore.widgetLastAccess
+        }
     }
 }

@@ -57,6 +57,7 @@ enum WidgetSharedStore {
     static let appGroupID = "group.app.hkbus.swiftui"
     static let widgetKind = "RouteCountdownWidget"
     private static let snapshotKey = "widget.snapshot.v1"
+    private static let widgetAccessKey = "widget.last-access"
 
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: appGroupID)
@@ -78,6 +79,14 @@ enum WidgetSharedStore {
 
     static func removeAll() {
         defaults?.removeObject(forKey: snapshotKey)
+    }
+
+    static func markWidgetAccess() {
+        defaults?.set(Date(), forKey: widgetAccessKey)
+    }
+
+    static var widgetLastAccess: Date? {
+        defaults?.object(forKey: widgetAccessKey) as? Date
     }
 
     /// Verifies both the entitlement-backed container and a real shared

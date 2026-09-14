@@ -757,11 +757,25 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新检查" } }
       }
     },
+    "settings.widget.extensionAccess" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Widget last connected" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "小工具最近連接" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小组件最近连接" } }
+      }
+    },
+    "settings.widget.extensionWaiting" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for widget" } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "等待小工具" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "等待小组件" } }
+      }
+    },
     "settings.widget.appGroup.help" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Checks that the app and widget can access and write the shared container. Some free sideloading certificates do not support App Groups." } },
-        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "檢查 App 與小工具能否存取及寫入共享容器。部分免費側載憑證不支援 App Groups。" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "检查 App 与小组件能否访问及写入共享容器。部分免费侧载证书不支持 App Groups。" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The first result tests app read/write access. The connection time confirms that the widget extension also reached the shared container. Some free sideloading certificates do not support App Groups." } },
+        "zh-Hant" : { "stringUnit" : { "state" : "translated", "value" : "第一項檢查 App 讀寫權限；連接時間確認小工具擴展也曾存取共享容器。部分免費側載憑證不支援 App Groups。" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "第一项检查 App 读写权限；连接时间确认小组件扩展也曾访问共享容器。部分免费侧载证书不支持 App Groups。" } }
       }
     },
     "status.checkingUpdate" : {

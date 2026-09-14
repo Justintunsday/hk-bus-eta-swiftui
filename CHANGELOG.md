@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1 (build 15)
+
+- Extended the App Group diagnostic with a widget-side heartbeat and the
+  extension's most recent shared-container access time, so sideloaded builds
+  can verify both the app and widget entitlements instead of only the app.
+
 ## 1.6.0 (build 14)
 
 - Added an App Group diagnostic in Settings that verifies both the shared

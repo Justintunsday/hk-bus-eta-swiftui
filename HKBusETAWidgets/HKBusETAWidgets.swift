@@ -104,6 +104,7 @@ struct RouteCountdownProvider: AppIntentTimelineProvider {
     }
 
     private func currentEntry(configuration: SelectWidgetFavoriteIntent) -> RouteCountdownEntry {
+        WidgetSharedStore.markWidgetAccess()
         let items = WidgetSharedStore.load().orderedByArrival
         if let selectedID = configuration.favorite?.id {
             return RouteCountdownEntry(date: Date(), items: items.filter { $0.id == selectedID })
