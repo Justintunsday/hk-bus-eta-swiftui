@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.5.0 (build 12)
+
+- Added a Home Screen and Lock Screen widget showing the next arrival for
+  pinned favorite routes or stops:
+  - Home Screen: small (one pin) and medium (up to three pins)
+  - Lock Screen: circular, rectangular and inline accessory families
+  - Tabular rounded countdowns on the app's coral accent with WidgetKit's
+    self-updating timer text, bilingual strings, tap opens the app.
+- Favorites page gains a swipe "pin to widget" action (up to three pins) with
+  an inline pin indicator; route pins reuse the last viewed stop for that
+  route.
+- ETA screens (Hong Kong route/stop boards and mainland boards) refresh the
+  pinned items' arrival times so the widget always carries the latest data
+  the app has seen.
+- Data is shared through the `group.app.hkbus.swiftui` App Group. Sideloading
+  with a free Apple ID may not grant App Groups; in that case the widget
+  shows its empty state.
+
 ## 1.4.3 (build 11)
 
 - Added simple transit-mode icons for other-region lines: mainland search
