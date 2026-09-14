@@ -1,51 +1,32 @@
 import SwiftUI
 
+/// Favorites, grouped by transit region.
+///
+/// Warm Minimal pass (swiftui-design-skill): the region used to be a
+/// third-line caption inside every row, which buried the one piece of
+/// context that matters when favorites span several cities. The region is now
+/// the section header itself — the page's organising element — and rows only
+/// carry destination, origin and operators.
 struct FavoritesView: View {
     @Environment(AppState.self) private var app
 
-    private var language: AppLanguage { L10n.language }
-    private var favoriteRoutes: [RegionalFavoriteRoute] { app.bookmarks.allFavoriteRoutes }
-    private var favoriteStops: [RegionalFavoriteStop] { app.bookmarks.allFavoriteStops }
+    private var routeSections: [FavoriteSection<RegionalFavoriteRoute>] {
+        makeSections(app.bookmarks.allFavoriteRoutes) { $0.regionID }
+    }
+
+    private var stopSections: [FavoriteSection<RegionalFavoriteStop>] {
+        makeSections(app.bookmarks.allFavoriteStops) { $0.regionID }
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if favoriteRoutes.isEmpty && favoriteStops.isEmpty {
-                    ContentUnavailableView {
-                        Label(L10n.t("favorites.empty.title"), systemImage: "star")
-                    } description: {
-                        Text(L10n.t("favorites.empty.message"))
-                    }
+                if routeSections.isEmpty && stopSections.isEmpty {
+                    emptyState
                 } else {
                     List {
-                        if !favoriteRoutes.isEmpty {
-                            Section(L10n.t("favorites.routes")) {
-                                ForEach(favoriteRoutes) { item in
-                                    NavigationLink(value: SavedRouteTarget(item)) {
-                                        routeRow(item)
-                                    }
-                                }
-                                .onDelete { offsets in
-                                    app.bookmarks.removeFavoriteRoutes(offsets.map { favoriteRoutes[$0] })
-                                }
-                            }
-                        }
-                        if !favoriteStops.isEmpty {
-                            Section(L10n.t("favorites.stops")) {
-                                ForEach(favoriteStops) { item in
-                                    NavigationLink(value: SavedStopTarget(item)) {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            let favorite = item.favorite
-                                            Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
-                                            regionLabel(item.regionID)
-                                        }
-                                    }
-                                }
-                                .onDelete { offsets in
-                                    app.bookmarks.removeFavoriteStops(offsets.map { favoriteStops[$0] })
-                                }
-                            }
-                        }
+                        routeList
+                        stopList
                     }
                 }
             }
@@ -68,33 +49,154 @@ struct FavoritesView: View {
         }
     }
 
-    private func routeRow(_ item: RegionalFavoriteRoute) -> some View {
+    @ViewBuilder
+    private var routeList: some View {
+        ForEach(routeSections) { section in
+            Section {
+                ForEach(section.items) { item in
+                    NavigationLink(value: SavedRouteTarget(item)) {
+                        RouteFavoriteRow(item: item)
+                    }
+                }
+                .onDelete { offsets in
+                    app.bookmarks.removeFavoriteRoutes(offsets.map { section.items[$0] })
+                }
+            } header: {
+                FavoriteSectionHeader(
+                    kind: L10n.t("favorites.routes"),
+                    regionID: section.regionID,
+                    count: section.items.count
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var stopList: some View {
+        ForEach(stopSections) { section in
+            Section {
+                ForEach(section.items) { item in
+                    NavigationLink(value: SavedStopTarget(item)) {
+                        StopFavoriteRow(item: item)
+                    }
+                }
+                .onDelete { offsets in
+                    app.bookmarks.removeFavoriteStops(offsets.map { section.items[$0] })
+                }
+            } header: {
+                FavoriteSectionHeader(
+                    kind: L10n.t("favorites.stops"),
+                    regionID: section.regionID,
+                    count: section.items.count
+                )
+            }
+        }
+    }
+
+    private var emptyState: some View {
+        ContentUnavailableView {
+            Label(L10n.t("favorites.empty.title"), systemImage: "star")
+        } description: {
+            Text(L10n.t("favorites.empty.message"))
+        }
+    }
+
+    /// Groups favorites by region, keeping the newest-first order inside each
+    /// group and the catalog order (Hong Kong first) for the sections.
+    private func makeSections<Item: Identifiable>(
+        _ items: [Item],
+        regionID: (Item) -> String
+    ) -> [FavoriteSection<Item>] {
+        var order: [String] = []
+        var buckets: [String: [Item]] = [:]
+        for item in items {
+            let id = regionID(item)
+            if buckets[id] == nil { order.append(id) }
+            buckets[id, default: []].append(item)
+        }
+        order.sort { regionSortIndex($0) < regionSortIndex($1) }
+        return order.map { FavoriteSection(regionID: $0, items: buckets[$0] ?? []) }
+    }
+
+    private func regionSortIndex(_ regionID: String) -> Int {
+        RegionCatalog.all.firstIndex { $0.id == regionID } ?? Int.max
+    }
+}
+
+struct FavoriteSection<Item: Identifiable>: Identifiable {
+    let regionID: String
+    let items: [Item]
+
+    var id: String { regionID }
+}
+
+/// Section header: kind · region on the left, count on the right.
+private struct FavoriteSectionHeader: View {
+    let kind: String
+    let regionID: String
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: DesignTokens.Spacing.xs) {
+            Image(systemName: "mappin.and.ellipse")
+                .font(DesignTokens.footnote)
+            Text("\(kind) · \(regionName)")
+                .font(DesignTokens.caption)
+            Spacer()
+            Text("\(count)")
+                .font(DesignTokens.caption)
+                .monospacedDigit()
+        }
+        .foregroundStyle(DesignTokens.textTertiary)
+        .textCase(nil)
+    }
+
+    private var regionName: String {
+        RegionCatalog.region(for: regionID)?.name ?? regionID
+    }
+}
+
+private struct RouteFavoriteRow: View {
+    @Environment(AppState.self) private var app
+    let item: RegionalFavoriteRoute
+
+    private var language: AppLanguage { L10n.language }
+
+    var body: some View {
         let favorite = item.favorite
-        return HStack(spacing: 12) {
+        return HStack(spacing: DesignTokens.Spacing.s + DesignTokens.Spacing.xs) {
             RouteBadge(
                 route: favorite.route,
                 entry: item.regionID == app.region.id ? app.data.entry(favorite.routeKey) : nil
             )
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(L10n.t("route.to")) \(language.isChinese ? L10n.display(favorite.destZh) : favorite.destEn)")
+                    .font(DesignTokens.body)
+                    .fontWeight(.medium)
                     .lineLimit(1)
-                HStack(spacing: 6) {
+                HStack(spacing: DesignTokens.Spacing.xs + 2) {
                     Text(language.isChinese ? L10n.display(favorite.origZh) : favorite.origEn)
                     Text("·")
                     CompanyLogos(co: favorite.co, language: language, height: 13)
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(DesignTokens.caption)
+                .foregroundStyle(DesignTokens.textSecondary)
                 .lineLimit(1)
-                regionLabel(item.regionID)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, DesignTokens.Spacing.xxs)
     }
+}
 
-    private func regionLabel(_ regionID: String) -> some View {
-        Label(RegionCatalog.region(for: regionID)?.name ?? regionID, systemImage: "mappin.and.ellipse")
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
+private struct StopFavoriteRow: View {
+    let item: RegionalFavoriteStop
+
+    private var language: AppLanguage { L10n.language }
+
+    var body: some View {
+        let favorite = item.favorite
+        return Text(language.isChinese ? L10n.display(favorite.nameZh) : favorite.nameEn)
+            .font(DesignTokens.body)
+            .lineLimit(1)
     }
 }
