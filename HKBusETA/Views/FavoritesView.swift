@@ -10,6 +10,8 @@ import SwiftUI
 struct FavoritesView: View {
     @Environment(AppState.self) private var app
 
+    private var language: AppLanguage { L10n.language }
+
     private var routeSections: [FavoriteSection<RegionalFavoriteRoute>] {
         makeSections(app.bookmarks.allFavoriteRoutes) { $0.regionID }
     }
