@@ -31,12 +31,11 @@ official base data when configured. This is not an official app.
   home widgets and circular/rectangular/inline lock screen families, with
   live countdowns for the next arrival (pin favorites from the Favorites
   page; up to three pins)
-- **SideStore-compatible Route & stop widget**: one searchable AppEntity accepts
-  a city-prefixed query such as `佛山 352` or `上海 71 人民广场`; manual fields
-  also accept a city, route, direction and optional stop when the picker has no
-  options. The widget carries its city ID/name, route direction and station in
-  a self-contained ID, and calls the hosted API directly without App Group
-  sharing or location
+- **SideStore-compatible Route & stop widget**: always-available fields select
+  the city, route, direction and optional stop without a dynamic entity picker.
+  The widget carries its city ID/name, route direction and station in a
+  self-contained ID, and calls the hosted API directly without App Group sharing
+  or location
 - Nearby stops with distance, favorites for whole routes and stops, recents
 - ETA display modes (clock time / minutes / both), scheduled-trip markers
 - Traditional Chinese, Simplified Chinese and English
@@ -77,7 +76,7 @@ official base data when configured. This is not an official app.
 - `HKBusETA/Views` — search, route, ETA, nearby, favorites, settings
 - `HKBusETAWidgets` — WidgetKit extension (home + lock screen families)
   - `RouteCountdownWidget`: existing App Group-backed favorites snapshot
-  - `SideStoreTransitWidget`: independently searchable city/route/stop target;
+  - `SideStoreTransitWidget`: independently configured city/route/stop target;
     the extension calls `/search`, `/lines/detail` and `/lines/realtime`
     directly and falls back from the primary hosted API to Vercel
   - `Shared/WidgetSnapshot.swift` remains compiled into both targets for the
