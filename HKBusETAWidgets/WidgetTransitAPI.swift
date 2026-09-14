@@ -477,8 +477,7 @@ struct WidgetTransitTargetResolver: Sendable {
                 return leftOrder == rightOrder ? left.offset < right.offset : leftOrder < rightOrder
             }
             for (index, station) in stations {
-                guard let stopID = clean(station.physicalStopID),
-                      let stationID = clean(station.stationID),
+                guard let stationID = clean(station.stationID),
                       let stopName = clean(station.name),
                       let latitude = station.latitude,
                       let longitude = station.longitude,
@@ -486,6 +485,9 @@ struct WidgetTransitTargetResolver: Sendable {
                 else { continue }
                 let stopSequence = station.order ?? (index + 1)
                 guard stopSequence > 0 else { continue }
+                // Realtime requests use `sId`. Some deployments omit
+                // `physicalStId`, so keep an otherwise queryable stop.
+                let stopID = clean(station.physicalStopID) ?? stationID
                 if let stopHint, !WidgetTransitQueryParser.folded(stopName).contains(WidgetTransitQueryParser.folded(stopHint)) {
                     continue
                 }

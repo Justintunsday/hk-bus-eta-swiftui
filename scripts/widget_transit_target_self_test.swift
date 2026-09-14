@@ -51,7 +51,7 @@ private struct FixtureTransport: WidgetTransitAPITransport, @unchecked Sendable 
         let stop = lineID.hasPrefix("fs-") ? "季华园" : "人民广场"
         let prefix = lineID.hasPrefix("fs-") ? "019" : "034"
         let name = lineID.hasPrefix("fs-") ? "352" : "71"
-        return "{\"line\":{\"lineId\":\"\(lineID)\",\"name\":\"\(name)\",\"startSn\":\"\(start)\",\"endSn\":\"\(end)\"},\"stations\":[{\"order\":1,\"sId\":\"\(prefix)-1\",\"sn\":\"起点\",\"wgsLat\":31.2200,\"wgsLng\":121.4600,\"physicalStId\":\"\(prefix)-1\"},{\"order\":2,\"sId\":\"\(prefix)-2\",\"sn\":\"\(stop)\",\"wgsLat\":31.2300,\"wgsLng\":121.4700,\"physicalStId\":\"\(prefix)-2\"}],\"empty\":false}"
+        return "{\"line\":{\"lineId\":\"\(lineID)\",\"name\":\"\(name)\",\"startSn\":\"\(start)\",\"endSn\":\"\(end)\"},\"stations\":[{\"order\":1,\"sId\":\"\(prefix)-1\",\"sn\":\"起点\",\"wgsLat\":31.2200,\"wgsLng\":121.4600,\"physicalStId\":\"\(prefix)-1\"},{\"order\":2,\"sId\":\"\(prefix)-2\",\"sn\":\"\(stop)\",\"wgsLat\":31.2300,\"wgsLng\":121.4700}],\"empty\":false}"
     }
 }
 
@@ -100,6 +100,7 @@ struct WidgetTransitTargetSelfTest {
         precondition(shanghaiTargets.allSatisfy {
             $0.cityID == "034" && $0.cityName == "上海" && $0.lineName == "71" && $0.stopName == "人民广场"
         })
+        precondition(shanghaiTargets.allSatisfy { $0.stopID == $0.stationID }, "sId must cover missing physicalStId")
         let etaResult = await resolver.etaDates(for: record)
         precondition(etaResult.unavailable == false && etaResult.dates.count == 1)
 
